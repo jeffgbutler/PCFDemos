@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "loan-calculator-client"
+		},
+		{
+			"path": "loan-calculator"
+		},
+		{
+			"path": "loan-calculator-redis"
+		}
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "automatic"
+	}
+}

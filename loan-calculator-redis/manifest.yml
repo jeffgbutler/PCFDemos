@@ -1,0 +1,9 @@
+applications:
+- name: loan-calculator-1.1
+  memory: 640M
+  buildpack: https://github.com/cloudfoundry/java-buildpack.git
+  path: target/loan-calculator-redis-1.1.jar
+  routes:
+  - route: jgb-loan-calculator-11.cfapps.io
+  services:
+  - jgbredis
