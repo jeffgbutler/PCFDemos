@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "loan-calculator-redis"
+		},
+		{
+			"path": "NetLoanCalculator"
 		}
 	],
 	"settings": {
