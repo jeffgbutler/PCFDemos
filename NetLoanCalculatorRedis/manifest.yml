@@ -1,0 +1,7 @@
+applications:
+- name: NetLoanCalculator-1.1
+  path: bin/Debug/netcoreapp2.1/publish
+  routes:
+  - route: jgb-loan-calculator-11.cfapps.io
+  services:
+  - jgbredis
