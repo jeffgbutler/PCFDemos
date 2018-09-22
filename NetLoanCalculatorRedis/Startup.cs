@@ -28,7 +28,7 @@ namespace NetLoanCalculatorRedis
             services.ConfigureCloudFoundryOptions(Configuration);
 
             var instanceId = Configuration["vcap:application:instance_id"];
-            if (instanceId == null)
+            if (string.IsNullOrEmpty(instanceId))
             {
                 services.AddSingleton<IHitCountService, MemoryHitCountService>();
             }
@@ -37,10 +37,8 @@ namespace NetLoanCalculatorRedis
                 services.AddSingleton<IHitCountService, RedisHitCountService>();
             }
 
-
             services.AddSingleton<PaymentCalculator>(new PaymentCalculator());
             services.AddSingleton<Crasher>(new Crasher());
-
             services.AddRedisConnectionMultiplexer(Configuration);
         }
 
