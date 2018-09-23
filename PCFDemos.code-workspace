@@ -17,6 +17,9 @@
 		},
 		{
 			"path": "mybatis-mysql"
+		},
+		{
+			"path": "jpa-mysql"
 		}
 	],
 	"settings": {

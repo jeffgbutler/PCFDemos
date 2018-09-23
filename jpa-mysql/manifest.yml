@@ -1,0 +1,8 @@
+applications:
+- name: jpa-mysql-demo
+  memory: 1024M
+  buildpack: https://github.com/cloudfoundry/java-buildpack.git
+  path: target/jpa-mysql-1.0.jar
+  random-route: true
+  services:
+  - jgb-db
