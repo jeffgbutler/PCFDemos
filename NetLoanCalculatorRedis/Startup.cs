@@ -11,12 +11,14 @@ namespace NetLoanCalculatorRedis
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IHostingEnvironment environment)
         {
             Configuration = configuration;
+            env = environment;
         }
 
         public IConfiguration Configuration { get; }
+        public IHostingEnvironment env {get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -27,8 +29,7 @@ namespace NetLoanCalculatorRedis
             services.AddOptions();
             services.ConfigureCloudFoundryOptions(Configuration);
 
-            var instanceId = Configuration["vcap:application:instance_id"];
-            if (string.IsNullOrEmpty(instanceId))
+            if (env.IsDevelopment())
             {
                 services.AddSingleton<IHitCountService, MemoryHitCountService>();
             }
