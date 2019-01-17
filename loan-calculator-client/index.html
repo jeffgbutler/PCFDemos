@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Payment Service Traffic Simulator</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous" />
+  </head>
+  <body>
+    <div class="container-fluid">
+      <h1>Payment Service Traffic Simulator</h1>
+      <div id="app">
+        <form>
+          <div class="form-group">
+            <label for="urlBox">Base URL</label>
+            <input class="form-control" id="urlBox" type="text" v-model="baseURL" />
+          </div>
+        </form>
+        <div>
+          <button class="btn btn-primary" @click="start" v-bind:disabled="startDisabled">Start</button>
+          <button class="btn btn-primary" @click="stop" v-bind:disabled="!started">Stop</button>
+          <button class="btn btn-primary" @click="clear">Clear History</button>
+          <button class="btn btn-primary" @click="resetCount">Reset Count</button>
+          <button class="btn btn-danger" @click="crashIt">Crash It!</button>
+        </div>
+
+        <div v-if="hasPaymentHistory">
+          <h2>Payment History</h2>
+          <table class="table table-striped">
+            <thead class="thead-light">
+              <tr>
+                <th>Amount</th>
+                <th>Rate</th>
+                <th>Years</th>
+                <th>Payment</th>
+                <th>Timestamp</th>
+                <th>PCF Instance</th>
+                <th>Hit Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="hist in paymentHistory">
+                <td>${{hist.amount}}</td>
+                <td>{{hist.rate}}%</td>
+                <td>{{hist.years}}</td>
+                <td>${{hist.payment}}</td>
+                <td>{{hist.timestamp}}</td>
+                <td>{{hist.instance}}</td>
+                <td>{{hist.count}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div v-if="hasErrors">
+          <h2>Error History</h2>
+          <table class="table table-striped">
+            <thead class="thead-light">
+              <tr>
+                <th>Request</th>
+                <th>Error</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="error in errorHistory">
+                <td valign="top">{{ error.request }}</td>
+                <td valign="top">{{ error.message }}</td>
+                <td valign="top">{{ error.timestamp }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
