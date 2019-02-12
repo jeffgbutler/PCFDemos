@@ -23,6 +23,9 @@
 		},
 		{
 			"path": "jpa-autorest-mysql"
+		},
+		{
+			"path": "live-coding-scripts"
 		}
 	],
 	"settings": {
