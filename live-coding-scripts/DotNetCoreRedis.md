@@ -216,7 +216,7 @@ Swagger is a REST documentation and UI tool, that also includes code generation 
     services.AddCloudFoundryActuators(Configuration);
     ```
 
-1. Modify `Startup.cs`, add the following to the end of the `Configure` method before the `UseMvc` middleware:
+1. Modify `Startup.cs`, add the following to the end of the `Configure` method before the Swagger middleware:
 
     ```csharp
     app.UseCloudFoundryActuators();
