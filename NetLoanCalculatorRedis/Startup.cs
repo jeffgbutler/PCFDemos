@@ -15,7 +15,7 @@ namespace NetLoanCalculatorRedis
     {
         public Startup(IConfiguration configuration, IHostingEnvironment environment)
         {
-            Configuration = configuration.DecodeAzureServiceBrokerRedisUrl();
+            Configuration = configuration;
             env = environment;
         }
 
@@ -37,6 +37,7 @@ namespace NetLoanCalculatorRedis
             }
             else
             {
+                services.AddRedisConnectionMultiplexer(Configuration);
                 services.AddSingleton<IHitCountService, RedisHitCountService>();
             }
 
@@ -49,8 +50,6 @@ namespace NetLoanCalculatorRedis
             });
 
             services.AddCloudFoundryActuators(Configuration);
-
-            services.AddRedisConnectionMultiplexer(Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -63,12 +62,14 @@ namespace NetLoanCalculatorRedis
             else
             {
                 app.UseHsts();
+                // bug in Steeltoe 2.2.0 - this will cause a crash when locally, so only run
+                // when deployed to CF
+                // possibly resolved in https://github.com/SteeltoeOSS/Management/pull/53
                 app.UseCloudFoundryActuators();
             }
 
             app.UseCors(builder => builder.AllowAnyOrigin());
             app.UseHttpsRedirection();
-
 
             app.UseSwagger();
             app.UseSwaggerUI(c =>
