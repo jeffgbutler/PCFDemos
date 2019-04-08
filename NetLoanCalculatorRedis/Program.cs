@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Steeltoe.Extensions.Configuration.CloudFoundry;
+using Steeltoe.Extensions.Logging;
 
 namespace NetLoanCalculatorRedis
 {
@@ -21,6 +22,12 @@ namespace NetLoanCalculatorRedis
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .AddCloudFoundry();
+                .AddCloudFoundry()
+                .ConfigureLogging((builderContext, loggingBuilder) =>
+                {
+                    loggingBuilder.AddConfiguration(builderContext.Configuration.GetSection("Logging"));
+                    loggingBuilder.AddDynamicConsole();
+                    loggingBuilder.AddDebug();
+                });
     }
 }

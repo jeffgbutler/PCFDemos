@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NetLoanCalculator.Services;
-using Steeltoe.CloudFoundry.Connector.Redis;
 using Steeltoe.Extensions.Configuration.CloudFoundry;
+using Steeltoe.Management.CloudFoundry;
+using Swashbuckle.AspNetCore.Swagger;
+using Steeltoe.CloudFoundry.Connector.Redis;
 
 namespace NetLoanCalculatorRedis
 {
@@ -13,7 +15,7 @@ namespace NetLoanCalculatorRedis
     {
         public Startup(IConfiguration configuration, IHostingEnvironment environment)
         {
-            Configuration = configuration;
+            Configuration = configuration.DecodeAzureServiceBrokerRedisUrl();
             env = environment;
         }
 
@@ -40,6 +42,14 @@ namespace NetLoanCalculatorRedis
 
             services.AddSingleton<PaymentCalculator>(new PaymentCalculator());
             services.AddSingleton<Crasher>(new Crasher());
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info { Title = "My API", Version = "v1" });
+            });
+
+            services.AddCloudFoundryActuators(Configuration);
+
             services.AddRedisConnectionMultiplexer(Configuration);
         }
 
@@ -53,10 +63,20 @@ namespace NetLoanCalculatorRedis
             else
             {
                 app.UseHsts();
+                app.UseCloudFoundryActuators();
             }
 
             app.UseCors(builder => builder.AllowAnyOrigin());
             app.UseHttpsRedirection();
+
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                c.RoutePrefix = string.Empty;
+            });
+
             app.UseMvc();
         }
     }
