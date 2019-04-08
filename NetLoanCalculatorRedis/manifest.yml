@@ -1,10 +1,6 @@
 applications:
 - name: NetLoanCalculator-1.1
-  path: bin/Debug/netcoreapp2.1/publish
-  routes:
-  - route: jgb-loan-calculator-11.cfapps.io
+  path: bin/Debug/netcoreapp2.2/publish
+  random-route: true
   services:
   - jgbredis
-  env:
-    ASPNETCORE_ENVIRONMENT: Staging
-    
