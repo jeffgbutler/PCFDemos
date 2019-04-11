@@ -28,7 +28,7 @@ This exercise will cover the following:
 If you are using your own installation of PCF, then obtain credentials and API enpoint information from your PCF platform team. If you are using Pivotal Web Services (the public PCF instance hosted by Pivotal), follow thses steps:
 
 1. Open the page https://run.pivotal.io/ and register for a free account
-1. Open a terminal or command window and login to PCF with the command `cf login -a api.run.pivotal.io`
+1. Open a terminal or command window and login to PCF with the command `cf login -a api.run.pivotal.io` (or whatever API endpoint you are using if not Pivotal Web Services)
 1. Enter the email you registered with and the password you set
 
 ### Create a Redis Cache Instance
