@@ -272,6 +272,15 @@ During the push process, PCF will create a route for the app. Make note of the r
     ```shell
     dotnet add package Microsoft.Extensions.Caching.Redis
     ```
+1. If you are using Azure Redis Cache through the Azure Service Broker on PCF, then modify `appsettings.json` and add the following configuration:
+
+    ```json
+    "redis": {
+      "client": {
+        "urlEncodedCredentials": true
+      }
+    }
+    ```
 
 1. Create a file called `HitCounter.cs` in the `Services` folder. Set it's contents to the following:
 
