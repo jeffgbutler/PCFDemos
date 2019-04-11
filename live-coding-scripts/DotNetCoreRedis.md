@@ -31,6 +31,18 @@ If you are using your own installation of PCF, then obtain credentials and API e
 1. Open a terminal or command window and login to PCF with the command `cf login -a api.run.pivotal.io`
 1. Enter the email you registered with and the password you set
 
+### Create a Redis Cache Instance
+
+1. Login to Pivotal Apps Manager
+1. Navigate to your org/space
+1. Select the "services" tab
+1. Press the "Add a Service" button
+1. Create a new service...
+   - (With the Azure Service Broker)
+   - Select "Azure Redis Cache"
+   - Select plan type "Basic C0"
+   - name the instance "xxxredis" where "xxx" are your initials
+
 ## Build a Simple Web Service
 
 1. Create a basic web service project and open it in VS Code
@@ -202,6 +214,8 @@ Swagger is a REST documentation and UI tool, that also includes code generation 
 
 1. `cf push`
 
+During the push process, PCF will create a route for the app. Make note of the route - you can acces the application at this URL once the application has started.
+
 ## Steeltoe Management Endpoints
 
 1. Add the Nuget package for Steeltoe to the project:
@@ -307,7 +321,7 @@ Swagger is a REST documentation and UI tool, that also includes code generation 
             }
         }
     }
-}    ```
+    ```
 
 1. Modify the constructor in `Startup.cs` to accept and keep the `IHostingEnvironment`
 
@@ -347,17 +361,62 @@ Swagger is a REST documentation and UI tool, that also includes code generation 
     services.AddRedisConnectionMultiplexer(Configuration);
     ```
 
-1. Modify `manifest.yml` to add the service binding:
+1. Modify `manifest.yml` to add the service binding (change the app version, and specify the correct name of the redis instance you created above):
 
     ```yaml
     applications:
-    - name: PaymentService-1.0
+    - name: PaymentService-1.1
       path: bin/Debug/netcoreapp2.2/publish
       random-route: true
       services:
-      - jgbredis
+      - xxxredis
     ```
 
 1. `dotnet publish`
 
 1. `cf push`
+
+## Blue-Green Deployment
+
+1. Create a new route with the cf cli:
+
+    ```bash
+    cf create-route dev apps.pcfpoc.jgbpcf.com --hostname xxx-loancalculator
+    ```
+
+    Where xxx is your initials
+
+1. Assign the route to version 1.0 of the app:
+
+    ```bash
+    cf map-route NetLoanCalculator-1.0 apps.pcfpoc.jgbpcf.com --hostname xxx-loancalculator
+    ```
+
+1. Verify that the app responds to the new URL.
+
+1. Assign the route to version 1.1 of the app:
+
+    ```bash
+    cf map-route NetLoanCalculator-1.1 apps.pcfpoc.jgbpcf.com --hostname xxx-loancalculator
+    ```
+    Where xxx is your initials
+
+1. Repeatedly try the app at the new route. You should see traffic bouncing back and forth between the two versions of the app
+
+1. Remove the route from version 1.0 of the app:
+
+    ```bash
+    cf unmap-route NetLoanCalculator-1.0 apps.pcfpoc.jgbpcf.com --hostname xxx-loancalculator
+    ```
+
+    Where xxx is your initials
+
+1. You should now see traffic only koing to the new version of the app
+
+1. Delete version 1.0 of the app:
+
+    ```bash
+    cf delete NetLoanCalculator-1.0 -r
+    ```
+
+    This deletes the app and its route
