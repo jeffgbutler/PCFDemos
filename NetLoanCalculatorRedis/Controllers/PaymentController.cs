@@ -23,15 +23,14 @@ namespace NetLoanCalculator.Controllers
         [HttpGet]
         public ActionResult<CalculatedPayment> calculatePayment(double Amount, double Rate, int Years)
         {
-            CalculatedPayment rv = new CalculatedPayment();
-            rv.Amount = Amount;
-            rv.Rate = Rate;
-            rv.Years = Years;
-            rv.Count = _HitCountService.GetAndIncrement();
-            rv.Instance = _ApplicationOptions.Instance_Index.ToString();
-            rv.Payment = _PaymentCalculator.Calculate(Amount, Rate, Years);
-
-            return rv;
+            return new CalculatedPayment {
+                Amount = Amount,
+                Rate = Rate,
+                Years = Years,
+                Count = _HitCountService.GetAndIncrement(),
+                Instance = _ApplicationOptions.InstanceIndex.ToString(),
+                Payment = _PaymentCalculator.Calculate(Amount, Rate, Years)
+            };
         }
     }
 }
