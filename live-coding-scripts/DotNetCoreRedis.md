@@ -419,7 +419,7 @@ During the push process, PCF will create a route for the app. Make note of the r
 
     Where xxx is your initials
 
-1. You should now see traffic only koing to the new version of the app
+1. You should now see traffic only going to the new version of the app
 
 1. Delete version 1.0 of the app:
 
