@@ -1,11 +1,11 @@
-# Spring Boot Exercise
+# Spring Boot and JPA Exercise
 
 ## Create the Basic Application
 
 1. Navigate to [https://start.spring.io](https://start.spring.io)
 1. Create a Maven project with Java and the latest version of Spring Boot (2.1.1 at the time of writing)
 1. Specify group: `microservice.workshop`
-1. Specify artifact: `springboot-demo`
+1. Specify artifact: `jpa-demo`
 1. For dependencies, add the following:
     - Web
     - Actuator
@@ -55,10 +55,10 @@
     </dependency>
     ```
 
-1. Create a class `SwaggerConfiguration` in the `micoservice.workshop.springbootdemo` package. Add the following:
+1. Create a class `SwaggerConfiguration` in the `micoservice.workshop.jpademo` package. Add the following:
 
     ```java
-    package microservice.workshop.springbootdemo;
+    package microservice.workshop.jpademo;
 
     import org.springframework.context.annotation.Bean;
     import org.springframework.context.annotation.Configuration;
@@ -99,12 +99,12 @@
 
 ## Create a Person Repository
 
-1. Create a package `microservice.workshop.springbootdemo.model`
+1. Create a package `microservice.workshop.jpademo.model`
 1. Create a class in the new package called `Person`
 1. Set the content of `Person` to the following:
 
     ```java
-    package microservice.workshop.springbootdemo.model;
+    package microservice.workshop.jpademo.model;
 
     import javax.persistence.Entity;
     import javax.persistence.GeneratedValue;
@@ -123,16 +123,16 @@
     }
     ```
 
-1. Create a package `microservice.workshop.springbootdemo.data`
+1. Create a package `microservice.workshop.jpademo.data`
 1. Create an interface in the new package called `PersonRepository`
 1. Set the content of `PersonRepository` to the following:
 
     ```java
-    package microservice.workshop.springbootdemo.data;
+    package microservice.workshop.jpademo.data;
 
     import java.util.List;
     import org.springframework.data.jpa.repository.JpaRepository;
-    import microservice.workshop.springbootdemo.model.Person;
+    import microservice.workshop.jpademo.model.Person;
 
     public interface PersonRepository extends JpaRepository<Person, Integer> {
         List<Person> findByLastName(String lastName);    
@@ -149,12 +149,12 @@
 
 ## Create a REST Controller
 
-1. Create a package `microservice.workshop.springbootdemo.http`
+1. Create a package `microservice.workshop.jpademo.http`
 1. Create a class in the new package called `PersonController`
 1. Set the content of `PersonController` to the following:
 
     ```java
-    package microservice.workshop.springbootdemo.http;
+    package microservice.workshop.jpademo.http;
 
     import java.util.List;
     import org.springframework.beans.factory.annotation.Autowired;
@@ -164,8 +164,8 @@
     import org.springframework.web.bind.annotation.RequestMapping;
     import org.springframework.web.bind.annotation.RequestParam;
     import org.springframework.web.bind.annotation.RestController;
-    import microservice.workshop.springbootdemo.data.PersonRepository;
-    import microservice.workshop.springbootdemo.model.Person;
+    import microservice.workshop.jpademo.data.PersonRepository;
+    import microservice.workshop.jpademo.model.Person;
 
     @RestController
     @RequestMapping("/person")
@@ -193,12 +193,12 @@
 
 ## Unit Tests
 
-1. Make a new package `microservice.workshop.springbootdemo.http` in the `src/test/java` tree
+1. Make a new package `microservice.workshop.jpademo.http` in the `src/test/java` tree
 1. Create a class in the new package called `PersonControllerTest`
 1. Set the content of `PersonControllerTest` to the following:
 
     ```java
-    package microservice.workshop.springbootdemo.http;
+    package microservice.workshop.jpademo.http;
     
     import static org.hamcrest.Matchers.*;
     import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -295,10 +295,10 @@
         - Select plan type "Basic"
         - name the instance "xxxsql" where "xxx" are your initials
 
-1. Create a class `CloudConfiguration` in the `micoservice.workshop.springbootdemo` package. Add the following:
+1. Create a class `CloudConfiguration` in the `micoservice.workshop.jpademo` package. Add the following:
 
     ```java
-    package microservice.workshop.springbootdemo;
+    package microservice.workshop.jpademo;
 
     import javax.sql.DataSource;
 
