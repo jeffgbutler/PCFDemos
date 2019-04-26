@@ -25,3 +25,4 @@ Script | Description
 --|--
 [Raw Knative Serving with Minikube](KnativeMinikube.md) | Simple Knative install and serving with raw Knative / Kubectl commands
 [Knative Serving with Knctl and Minikube](KnativeAndKnctlMinikube.md) | Simple Knative install and serving using Knctl
+[Knative Serving and Build with riff and Minikube](KnativeAndRiffMinikube.md) | Simple Knative install, serving, and Build using riff
