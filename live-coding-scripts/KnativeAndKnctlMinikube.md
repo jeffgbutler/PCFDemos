@@ -1,6 +1,6 @@
-# Using Knative with Minikube
+# Using Knative with Knctl and Minikube
 
-Use the knctl CLI for Knative with minikube. Knctl is a CLI for Knative that makes the serving and build portions easier. Knctl will probably eventually be merged into the new official Knative client (same people working on both). Knctl does not add anything for eventing. THis also demonstrates building and deploying a function using Spring Boot and the Kaniko build template.
+Use the knctl CLI for Knative with minikube. Knctl is a CLI for Knative that makes the serving and build portions easier. Knctl will probably eventually be merged into the new official Knative client (same people working on both). Knctl does not add anything for eventing. This also demonstrates building and deploying a function using Spring Boot and the Kaniko build template.
 
 ## Install Tools (Mac OS)
 
