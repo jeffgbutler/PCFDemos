@@ -23,3 +23,7 @@ Demos in this section show various ways of working with relational databases in 
 |[Persistence with MyBatis](mybatis-mysql) | Persistence with MyBatis. The UI is swagger based with a simple REST controller |
 |[Persistence with JPA](jpa-mysql) | Persistence with JPA/Hibernate. The UI is swagger based with a simple REST controller |
 |[Persistence with JPA Version 2](jpa-autorest-mysql) | Persistence with JPA/Hibernate. The REST controller here is created automagically using Spring data rest. Swagger will not generate a UI for Spring data rest at this time |
+
+## Live Coding
+
+Several live coding scripts demonstrating Java, C#, and Knative topics are available in the [live-coding-scripts](live-coding-scripts)
