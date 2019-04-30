@@ -1,7 +1,6 @@
 applications:
 - name: mybatis-mysql-demo
   memory: 640M
-  buildpack: https://github.com/cloudfoundry/java-buildpack.git
   path: target/mybatis-mysql-1.0.jar
   random-route: true
   services:

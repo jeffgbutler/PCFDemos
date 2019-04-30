@@ -4,7 +4,6 @@ This example shows how to configure a MyBatis based Spring Boot application for 
 
 The main differences are as follows:
 
-1. The `CloudConfig` class is the magic connector to Cloud Foundry - this class will connect MyBatis to a Cloud Foundry DB service
 2. When running locally, the `application-default.properties` file configures MyBatis for local H2 usage
 
 If you want to recreate the database on Cloud Foundry, the application is known to work with a MySQL instance initialized with this table definition:
