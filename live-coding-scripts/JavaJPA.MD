@@ -11,8 +11,6 @@
     - Actuator
     - JPA
     - H2
-    - SQL Server
-    - Cloud Connectors
 1. Generate the project (causes a download)
 1. Unzip the downloaded file somewhere convenient
 1. Add the new project to your IDE workspace
@@ -294,32 +292,6 @@
         - Select "Azure SQL Database Service"
         - Select plan type "Basic"
         - name the instance "xxxsql" where "xxx" are your initials
-
-1. Create a class `CloudConfiguration` in the `micoservice.workshop.jpademo` package. Add the following:
-
-    ```java
-    package microservice.workshop.jpademo;
-
-    import javax.sql.DataSource;
-
-    import org.springframework.cloud.config.java.AbstractCloudConfig;
-    import org.springframework.context.annotation.Bean;
-    import org.springframework.context.annotation.Configuration;
-    import org.springframework.context.annotation.Profile;
-
-    @Configuration
-    @Profile("cloud")
-    public class CloudConfiguration extends AbstractCloudConfig {
-
-        @Bean
-        public DataSource dataSource() {
-            // pull database connection from cloud foundry
-            return connectionFactory().dataSource();
-        }
-    }
-    ```
-
-    This configuration is enabled when the "cloud" profile is enabled only. On Cloud Foundry, the Java build pack enables this profile. When enabled, this configuration will create a data source based on the database bound to the application.
 
 1. Create and open a file `application-cloud.yml` in `src/main/resources`
 1. Add this value

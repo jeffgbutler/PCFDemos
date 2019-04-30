@@ -10,7 +10,6 @@
     - Web
     - Actuator
     - Redis
-    - Cloud Connectors
 1. Generate the project (causes a download)
 1. Unzip the downloaded file somewhere convenient
 1. Add the new project to your IDE workspace
@@ -470,7 +469,6 @@ You should now be able to test the app with Swagger at the route created by PCF.
     ```java
     package microservice.workshop.redisdemo;
 
-    import org.springframework.cloud.config.java.AbstractCloudConfig;
     import org.springframework.context.annotation.Bean;
     import org.springframework.context.annotation.Configuration;
     import org.springframework.context.annotation.Profile;
@@ -483,17 +481,12 @@ You should now be able to test the app with Swagger at the route created by PCF.
 
     @Configuration
     @Profile("cloud")
-    public class CloudConfiguration extends AbstractCloudConfig {
+    public class CloudConfiguration {
 
         @Bean
-        public RedisConnectionFactory redisFactory() {
-            return connectionFactory().redisConnectionFactory();
-        }
-    
-        @Bean
-        public RedisTemplate<String, Integer> redisTemplate() {
+        public RedisTemplate<String, Integer> redisTemplate(RedisConnectionFactory redisFactory) {
             RedisTemplate<String, Integer> template = new RedisTemplate<>();
-            template.setConnectionFactory(redisFactory());
+            template.setConnectionFactory(redisFactory;
             template.setValueSerializer(new GenericToStringSerializer<>(Integer.class));
             return template;
         }
