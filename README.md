@@ -26,4 +26,4 @@ Demos in this section show various ways of working with relational databases in 
 
 ## Live Coding
 
-Several live coding scripts demonstrating Java, C#, and Knative topics are available in the [live-coding-scripts](live-coding-scripts)
+Several live coding scripts demonstrating Java, C#, and Knative topics are available in the [live-coding-scripts](live-coding-scripts) directory.
