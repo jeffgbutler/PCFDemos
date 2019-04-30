@@ -205,11 +205,8 @@ Swagger is a REST documentation and UI tool, that also includes code generation 
     ```yaml
     applications:
     - name: PaymentService-1.0
-      path: bin/Debug/netcoreapp2.2/publish
-     random-route: true
+      random-route: true
     ```
-
-1. `dotnet publish`
 
 1. `cf push`
 
@@ -260,8 +257,6 @@ During the push process, PCF will create a route for the app. Make note of the r
       }
     } 
     ```
-
-1. `dotnet publish`
 
 1. `cf push`
 
@@ -374,13 +369,10 @@ During the push process, PCF will create a route for the app. Make note of the r
     ```yaml
     applications:
     - name: PaymentService-1.1
-      path: bin/Debug/netcoreapp2.2/publish
       random-route: true
       services:
       - xxxredis
     ```
-
-1. `dotnet publish`
 
 1. `cf push`
 

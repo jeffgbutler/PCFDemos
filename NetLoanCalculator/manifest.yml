@@ -1,4 +1,3 @@
 applications:
 - name: NetLoanCalculator-1.0
-  path: bin/Debug/netcoreapp2.2/publish
   random-route: true
