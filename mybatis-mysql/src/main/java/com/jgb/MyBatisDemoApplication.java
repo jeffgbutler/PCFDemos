@@ -7,10 +7,7 @@ import org.springframework.context.annotation.Bean;
 import com.jgb.service.MyBatisUserService;
 import com.jgb.service.UserService;
 
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
-
 @SpringBootApplication
-@EnableSwagger2
 public class MyBatisDemoApplication {
 
     public static void main(String[] args) {
