@@ -28,17 +28,6 @@ If you are using a private installation of PCF, then obtain credentials and API 
 1. Open a terminal or command window and login to PCF with the command `cf login -a api.run.pivotal.io` (or whatever API endpoint you are using if not Pivotal Web Services)
 1. Enter the email you registered and the password you set
 
-### Create a Redis Cache Instance
-
-1. Login to Pivotal Apps Manager
-1. Navigate to your org/space
-1. Select the "services" tab
-1. Press the "Add a Service" button
-1. Create a new service...
-   - Select "Redis Cache"
-   - Select plan type "30 MB" - the free plan
-   - Set the instance name to "xxxredis" where "xxx" are your initials
-
 ## Create the Basic Application
 
 1. Navigate to [https://start.spring.io](https://start.spring.io)
@@ -495,14 +484,24 @@ This is needed for the unit tests - will reset the hit counter to a known state 
 
 You should now be able to test the app with Swagger at the route created by PCF. One thing to note is that the hit counter will reset everytime you deploy (because it is stored in the app state). Also, when the app is scaled the hit counter will not be shared across instances.
 
+## Exercise the Application on PCF
+
+TODO TODO
+
 ## Configure Redis on Cloud Foundry
 
-1. Create a new Redis instance
-    1. Login to Pivotal Apps Manager
-    1. Navigate to your org/space
-    1. Select the "services" tab
-    1. Press the "Add a Service" button
-    1. Create a new service...
+### Create a Redis Cache Instance
+
+1. Login to Pivotal Apps Manager
+1. Navigate to your org/space
+1. Select the "services" tab
+1. Press the "Add a Service" button
+1. Create a new service...
+   - Select "Redis Cache"
+   - Select plan type "30 MB" - the free plan
+   - Set the instance name to "xxxredis" where "xxx" are your initials
+
+### Add a Redis Based Hit Counter
 
 1. Create a new class `RedisHitCounterService` in the `microservice.workshop.redisdemo.service` package
 1. Set the contents of `RedisHitCounterService` to the following:
@@ -532,7 +531,7 @@ You should now be able to test the app with Swagger at the route created by PCF.
     }
     ```
 
-1. Create a class `CloudConfiguration` in the `micoservice.workshop.redisdemo` package. Add the following:
+1. Create a class `CloudConfiguration` in the `microservice.workshop.redisdemo` package. Add the following:
 
     ```java
     package microservice.workshop.redisdemo;
@@ -586,11 +585,15 @@ You should now be able to test the app with Swagger at the route created by PCF.
     - name: RedisDemo-1.1
       path: target/redis-demo-0.0.1-SNAPSHOT.jar
       random-route: true
+      env:
+        JBP_CONFIG_OPEN_JDK_JRE: '{jre: {version: 12.+}}'
       services:
       - xxxredis
     ```
 
-    Where "xxxredis" maps to the name of the redis instance you created above
+    Where "xxxredis" maps to the name of the redis instance you created above. Note that you should also change the name of the application to denote the new version.
+
+1. Delete the file `application-cloud.yml` in `src/main/resources`
 
 1. Build the application:
     - (Windows Command Prompt) `mvnw clean package`
@@ -601,3 +604,7 @@ You should now be able to test the app with Swagger at the route created by PCF.
 1. `cf push`
 
 You should now be able to test the app with Swagger at the route created by PCF. The hit counter will now persist across deploymant and will be consistent as the app scales.
+
+## Blue Green Deployments
+
+TODO TODO
