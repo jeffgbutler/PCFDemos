@@ -271,6 +271,7 @@ If you are using a private installation of PCF, then obtain credentials and API 
     import org.slf4j.Logger;
     import org.slf4j.LoggerFactory;
     import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.beans.factory.annotation.Value;
     import org.springframework.web.bind.annotation.CrossOrigin;
     import org.springframework.web.bind.annotation.GetMapping;
     import org.springframework.web.bind.annotation.RequestMapping;
@@ -285,6 +286,9 @@ If you are using a private installation of PCF, then obtain credentials and API 
     @RestController
     @RequestMapping("/payment")
     public class PaymentController {
+
+        @Value("${cloud.application.instance_index:local}")
+        private String instance;
 
         @Autowired
         private HitCounterService hitCounterService;
