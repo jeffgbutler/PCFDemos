@@ -87,6 +87,18 @@ If you are using a private installation of PCF, then obtain credentials and API 
 
     This will tell SpringBoot not to configure Redis when we're running locally - even though Redis is on the classpath. Failure to do this will not stop the application from starting and running successfully. But the health actuator will show the application being down. 
 
+1. Create a file called `application-cloud.yml` in `src/main/resources`
+1. Set its content to the following:
+
+    ```yml
+    spring:
+      autoconfigure:
+        exclude:
+          - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+    ```
+
+    This will tell SpringBoot not to configure Redis when we're running in the cloud - even though Redis is on the classpath. We will remove this file once we're ready to work with redis. 
+
 ## Configure Swagger
 
 1. Open `pom.xml`, add the following dependencies:
@@ -239,7 +251,7 @@ If you are using a private installation of PCF, then obtain credentials and API 
         private int years;
         private BigDecimal payment;
         private String instance;
-        private Long hitCount;
+        private Long count;
     
         // getters/setters
     }
@@ -296,7 +308,7 @@ If you are using a private installation of PCF, then obtain credentials and API 
             calculatedPayment.setRate(rate);
             calculatedPayment.setYears(years);
             calculatedPayment.setPayment(payment);
-            calculatedPayment.setHitCount(hitCounterService.incrementCounter());
+            calculatedPayment.setCount(hitCounterService.incrementCounter());
         
             return calculatedPayment;
         }
@@ -322,7 +334,7 @@ This is needed for the unit tests - will reset the hit counter to a known state 
 
     @CrossOrigin(origins = "*")
     @RestController
-    @RequestMapping("/resetHitCounter")
+    @RequestMapping("/resetCount")
     public class ResetHitCounterController {
 
         @Autowired
@@ -394,44 +406,44 @@ This is needed for the unit tests - will reset the hit counter to a known state 
 
         @Test
         public void testWithInterest() throws Exception {
-            mockMvc.perform(get("/resetHitCounter"))
+            mockMvc.perform(get("/resetCount"))
             .andExpect(status().is(HttpStatus.OK.value()));
             
             mockMvc.perform(get("/payment?amount=100000&rate=3.5&years=30"))
             .andExpect(status().is(HttpStatus.OK.value()))
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(jsonPath("$.payment", is(449.04)))
-            .andExpect(jsonPath("$.hitCount", is(1)));
+            .andExpect(jsonPath("$.count", is(1)));
         }
 
         @Test
         public void testZeroInterest() throws Exception {
-            mockMvc.perform(get("/resetHitCounter"))
+            mockMvc.perform(get("/resetCount"))
             .andExpect(status().is(HttpStatus.OK.value()));
             
             mockMvc.perform(get("/payment?amount=100000&rate=0&years=30"))
             .andExpect(status().is(HttpStatus.OK.value()))
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(jsonPath("$.payment", is(277.78)))
-            .andExpect(jsonPath("$.hitCount", is(1)));
+            .andExpect(jsonPath("$.count", is(1)));
         }
 
         @Test
         public void testThatHitCounterIncrements() throws Exception {
-            mockMvc.perform(get("/resetHitCounter"))
+            mockMvc.perform(get("/resetCount"))
             .andExpect(status().is(HttpStatus.OK.value()));
             
             mockMvc.perform(get("/payment?amount=100000&rate=3.5&years=30"))
             .andExpect(status().is(HttpStatus.OK.value()))
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(jsonPath("$.payment", is(449.04)))
-            .andExpect(jsonPath("$.hitCount", is(1)));
+            .andExpect(jsonPath("$.count", is(1)));
 
             mockMvc.perform(get("/payment?amount=100000&rate=0&years=30"))
             .andExpect(status().is(HttpStatus.OK.value()))
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
             .andExpect(jsonPath("$.payment", is(277.78)))
-            .andExpect(jsonPath("$.hitCount", is(2)));
+            .andExpect(jsonPath("$.count", is(2)));
         }
     }
     ```
@@ -463,7 +475,11 @@ This is needed for the unit tests - will reset the hit counter to a known state 
     - name: RedisDemo-1.0
       path: target/redis-demo-0.0.1-SNAPSHOT.jar
       random-route: true
+      env:
+        JBP_CONFIG_OPEN_JDK_JRE: '{jre: {version: 12.+}}'
     ```
+
+    Note that this manifest specifies JRE 12+. This is not required if you are using Java 8. If you are using Java 11, you can change the environment variable accordingly. 
 
 1. Build the application:
     - (Windows Command Prompt) `mvnw clean package`
