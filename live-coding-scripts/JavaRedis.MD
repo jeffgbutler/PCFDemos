@@ -1,15 +1,56 @@
 # Spring Boot and Redis Exercise
 
+## Pre-Requisites
+
+### Cloud Foundry Command Line Interface (CLI)
+
+1. Install the Cloud Foundry CLI from this URL: https://docs.cloudfoundry.org/cf-cli/install-go-cli.html
+1. Verify the install by opening a terminal or command window and typing `cf --version`. You should see a version string to match the version you installed
+
+### Install an IDE
+
+Install and configure a Java IDE you are comfortable with. Good options include:
+
+- Eclipse: https://www.eclipse.org/
+- IntelliJ: https://www.jetbrains.com/idea/
+- Visual Studio Code: https://visualstudio.microsoft.com/
+
+If you install Visual Studio Code, then add the following extensions:
+
+- (Micorsoft) Java Extension Pack
+- (Pivotal) Spring Boot Extension Pack
+
+### Obtain PCF Credentials
+
+If you are using a private installation of PCF, then obtain credentials and API enpoint information from your PCF platform team. If you are using Pivotal Web Services (the public PCF instance hosted by Pivotal), follow thses steps:
+
+1. Open the page [https://run.pivotal.io/](https://run.pivotal.io/) and register for a free account
+1. Open a terminal or command window and login to PCF with the command `cf login -a api.run.pivotal.io` (or whatever API endpoint you are using if not Pivotal Web Services)
+1. Enter the email you registered and the password you set
+
+### Create a Redis Cache Instance
+
+1. Login to Pivotal Apps Manager
+1. Navigate to your org/space
+1. Select the "services" tab
+1. Press the "Add a Service" button
+1. Create a new service...
+   - Select "Redis Cache"
+   - Select plan type "30 MB" - the free plan
+   - Set the instance name to "xxxredis" where "xxx" are your initials
+
 ## Create the Basic Application
 
 1. Navigate to [https://start.spring.io](https://start.spring.io)
-1. Create a Maven project with Java and the latest version of Spring Boot (2.1.1 at the time of writing)
+1. Create a Maven project with Java and the latest version of Spring Boot (2.1.5 at the time of writing)
 1. Specify group: `microservice.workshop`
 1. Specify artifact: `redis-demo`
+1. Specify packaging: Jar
+1. Specify Java Version to match what you have installed
 1. For dependencies, add the following:
-    - Web
-    - Actuator
-    - Redis
+    - Spring Web Starter
+    - Spring Boot Actuator
+    - Spring Data Redis
 1. Generate the project (causes a download)
 1. Unzip the downloaded file somewhere convenient
 1. Add the new project to your IDE workspace
@@ -44,7 +85,7 @@
           - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
     ```
 
-    This will tell SpringBoot not to configure Redis when we're running locally - even though Redis is on the classpath
+    This will tell SpringBoot not to configure Redis when we're running locally - even though Redis is on the classpath. Failure to do this will not stop the application from starting and running successfully. But the health actuator will show the application being down. 
 
 ## Configure Swagger
 
@@ -215,6 +256,8 @@
 
     import java.math.BigDecimal;
 
+    import org.slf4j.Logger;
+    import org.slf4j.LoggerFactory;
     import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.web.bind.annotation.CrossOrigin;
     import org.springframework.web.bind.annotation.GetMapping;
@@ -237,11 +280,16 @@
         @Autowired
         private PaymentService paymentService;
 
+        private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
+
         @GetMapping()
         public CalculatedPayment calculatePayment(@RequestParam("amount") double amount, @RequestParam("rate") double rate,
                 @RequestParam("years") int years) {
 
             BigDecimal payment = paymentService.calculate(amount, rate, years);
+
+            logger.debug("Calculated payment of {} for input amount: {}, rate: {}, years: {}",
+                payment, amount, rate, years);
 
             CalculatedPayment calculatedPayment = new CalculatedPayment();
             calculatedPayment.setAmount(amount);
