@@ -17,14 +17,15 @@ Install and configure a Java IDE you are comfortable with. Good options include:
 
 If you install Visual Studio Code, then add the following extensions:
 
-- (Micorsoft) Java Extension Pack
+- (Microsoft) Java Extension Pack
 - (Pivotal) Spring Boot Extension Pack
 
 ### Obtain PCF Credentials
 
-If you are using a private installation of PCF, then obtain credentials and API enpoint information from your PCF platform team. If you are using Pivotal Web Services (the public PCF instance hosted by Pivotal), follow thses steps:
+If you are using a private installation of PCF, then obtain credentials and API enpoint information from your PCF platform team. If you are using Pivotal Web Services (the public PCF instance hosted by Pivotal), then go to [https://run.pivotal.io/](https://run.pivotal.io/) and register for a free account.
 
-1. Open the page [https://run.pivotal.io/](https://run.pivotal.io/) and register for a free account
+Once you have credentials, login with the CLI...
+
 1. Open a terminal or command window and login to PCF with the command `cf login -a api.run.pivotal.io` (or whatever API endpoint you are using if not Pivotal Web Services)
 1. Enter the email you registered and the password you set
 
@@ -45,11 +46,11 @@ If you are using a private installation of PCF, then obtain credentials and API 
 1. Add the new project to your IDE workspace
     - Eclipse: File->Import->Existing Maven Project
     - IntelliJ: File->New->Module From Existing Sources...
-    - VS Code: File->Add Folder to Workspace
-1. Rename `application.properties` in `src/main/resources` to `application.yml`
+    - VS Code: File->Add Folder to Workspace (or just open the folde by navigating to it and entering the command `code .`)
 
 ## Configure The Info Actuator
 
+1. Rename `application.properties` in `src/main/resources` to `application.yml`
 1. Open `application.yml` in `src/main/resources`
 1. Add this value
 
@@ -324,6 +325,7 @@ If you are using a private installation of PCF, then obtain credentials and API 
             calculatedPayment.setRate(rate);
             calculatedPayment.setYears(years);
             calculatedPayment.setPayment(payment);
+            calculatedPayment.setInstance(instance);
             calculatedPayment.setCount(hitCounterService.incrementCounter());
         
             return calculatedPayment;
@@ -332,7 +334,7 @@ If you are using a private installation of PCF, then obtain credentials and API 
     ```
 ## Create a REST Controller to Reset the Hit Count
 
-This is needed for the unit tests - will reset the hit counter to a known state for each test.
+This is needed for the unit tests - it will reset the hit counter to a known state for each test.
 
 1. Create a class `ResetHitCounterController` in package `microservice.workshop.redisdemo.http`
 1. Set the content of `ResetHitCounterController` to the following:
@@ -565,6 +567,7 @@ You should now be able to test the app with Swagger at the route created by PCF.
 
 Some interesting CLI commands...
 
+- `cf target` shows information about your current connection, also used to change org/space if you have more than one
 - `cf apps` will show all apps deployed in your current org/space
 - `cf routes` will show all routes in your current org/space
 - `cf services` will show all services allocated to your current org/space
@@ -711,4 +714,18 @@ You should now be able to test the app with Swagger at the route created by PCF.
 
 ## Blue Green Deployments
 
-TODO TODO
+1. Run `cf target` to determine your space name.
+1. `cf create-route <<your_space_name>> cfapps.io --hostname xxx-payment-calculator`
+1. `cf map-route RedisDemo-1.0 cfapps.io --hostname xxx-payment-calculator`
+
+Change the URL in the client page to the new route you've created (https://jgb-payment-calculator.cfapps.io). You should see traffic being routed to your app.
+
+Now route traffic to the 1.1 version of the app:
+
+- `cf map-route RedisDemo-1.1 cfapps.io --hostname xxx-payment-calculator`
+
+You should now see traffic being routed to the 1.0 and the 1.1 version of the application.
+
+Now take away the route to the 1.0 version of the app:
+
+- `cf unmap-route RedisDemo-1.0 cfapps.io --hostname xxx-payment-calculator`
