@@ -86,7 +86,7 @@ If you are using a private installation of PCF, then obtain credentials and API 
           - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
     ```
 
-    This will tell SpringBoot not to configure Redis when we're running in the cloud - even though Redis is on the classpath. We will remove this file once we're ready to work with redis. 
+    This will tell SpringBoot not to configure Redis when we're running in the cloud - even though Redis is on the classpath. We will remove this file once we're ready to work with Redis. 
 
 ## Configure Swagger
 
@@ -187,6 +187,7 @@ If you are using a private installation of PCF, then obtain credentials and API 
         }
     }
     ```
+
 ## Create a Hit Counter Service
 
 1. Create an interface in the `microservice.workshop.redisdemo.service` package called `HitCounterService`
@@ -223,6 +224,28 @@ If you are using a private installation of PCF, then obtain credentials and API 
     }
     ```
 
+## Create a Crash Service
+
+1. Create a class in the `microservice.workshop.redisdemo.service` package called `CrashService`
+1. Set the content of `CrashService` to the following:
+
+    ```java
+    package microservice.workshop.redisdemo.service;
+
+    import java.util.concurrent.Executors;
+    import java.util.concurrent.ScheduledExecutorService;
+    import java.util.concurrent.TimeUnit;
+
+    public class CrashService {
+        private ScheduledExecutorService executer = Executors.newScheduledThreadPool(1);
+    
+        // calls System.exit after a 2 second delay
+        public void crashIt() {
+            executer.schedule(() -> System.exit(22), 2000, TimeUnit.MILLISECONDS);
+        }
+    }
+    ```
+
 ## Create a Return Model
 
 1. Create a package `microservice.workshop.redisdemo.model`
@@ -242,7 +265,7 @@ If you are using a private installation of PCF, then obtain credentials and API 
         private String instance;
         private Long count;
     
-        // getters/setters
+        // TODO: add getters and setters for all fields...
     }
     ```
 
@@ -340,6 +363,42 @@ This is needed for the unit tests - will reset the hit counter to a known state 
     }
     ```
 
+## Create a REST Controller to Crash the Application
+
+This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
+
+1. Create a class `CrashController` in package `microservice.workshop.redisdemo.http`
+1. Set the content of `CrashController` to the following:
+
+    ```java
+    package microservice.workshop.redisdemo.http;
+
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.web.bind.annotation.CrossOrigin;
+    import org.springframework.web.bind.annotation.GetMapping;
+    import org.springframework.web.bind.annotation.RequestMapping;
+    import org.springframework.web.bind.annotation.RestController;
+
+    import io.swagger.annotations.ApiOperation;
+    import microservice.workshop.redisdemo.service.CrashService;
+
+    @CrossOrigin(origins = "*")
+    @RestController
+    @RequestMapping("/crash")
+    public class CrashController {
+
+        @Autowired
+        private CrashService crashService;
+
+        @ApiOperation("Warning! The application will crash 2 seconds after this method is called")
+        @GetMapping()
+        public String crashIt() {
+            crashService.crashIt();
+            return "OK";
+        }
+    }
+    ```
+
 ## Setup Dependency Injection
 
 1. Open the class `RedisDemoApplication` in the package `microservice.workshop.redisdemo`
@@ -355,6 +414,11 @@ This is needed for the unit tests - will reset the hit counter to a known state 
     public HitCounterService hitCounterService() {
         return new MemoryHitCounterService();
     }
+
+	@Bean
+	public CrashService crashService() {
+		return new CrashService();
+	}
     ```
 
 ## Unit Tests
@@ -472,9 +536,9 @@ This is needed for the unit tests - will reset the hit counter to a known state 
         JBP_CONFIG_OPEN_JDK_JRE: '{jre: {version: 12.+}}'
     ```
 
-    Note that this manifest specifies JRE 12+. This is not required if you are using Java 8. If you are using Java 11, you can change the environment variable accordingly. 
+    Note that this manifest specifies JRE 12+. This is not required if you are using Java 8 (the Java buildpack default). If you are using Java 11, you can change the environment variable accordingly. 
 
-1. Build the application:
+1. Build the application JAR file:
     - (Windows Command Prompt) `mvnw clean package`
     - (Windows Powershell) `.\mvnw  clean package`
     - (Mac/Linux) `./mvnw  clean package`
@@ -484,15 +548,53 @@ This is needed for the unit tests - will reset the hit counter to a known state 
 
 You should now be able to test the app with Swagger at the route created by PCF. One thing to note is that the hit counter will reset everytime you deploy (because it is stored in the app state). Also, when the app is scaled the hit counter will not be shared across instances.
 
-## Exercise the Application on PCF
+## Exercise the Application
 
-TODO TODO
+### Inspect the Application With the Apps Manager UI
+
+1. Login to Pivotal Apps Manager at https://run.pivotal.io/
+1. Inspect the application...specifically:
+   - On the app overview page, you should see the Spring Boot logo
+   - On the app overview page you should be able to inspect details of the app health
+   - On the logs page you should see the recent logs for the application, and be able to change logging levels
+   - On the threads page you should be able to obtain a thread dump
+   - On the settings page, there should be a Spring Info section. In that section you should be able to see the text you added to the info actuator by pressing the "View Raw JSON" button
+   - On the settings page you should be able to see the environment variable we specified in the manifest file, as well as environment variable supplied by Cloud Foundry
+
+### Inspect the Application With the CLI
+
+Some interesting CLI commands...
+
+- `cf apps` will show all apps deployed in your current org/space
+- `cf routes` will show all routes in your current org/space
+- `cf services` will show all services allocated to your current org/space
+- `cf app RedisDemo-1.0` will show detailed information about the application
+- `cf stop RedisDemo-1.0` will start the app
+- `cf start RedisDemo-1.0` will start the app
+- `cf events RedisDemo-1.0` will sho recent events in the applications (starts, stops, etc.)
+- `cf logs RedisDemo-1.0 --recent` will dump recent logging information to the screen
+- `cf logs RedisDemo-1.0` will tail the application log
+- `cf ssh-enabled RedisDemo-1.0` will report whether it is possible to SSH into the application container
+- `cf ssh RedisDemo-1.0` will SSH into the application container
+
+### Scale the Application
+
+Applications can be scaled in two ways - through the app manager UI, or through the CLI. We will use the CLI.
+
+1. Start the loan-calculator-client web page from this repository
+1. Enter the URL to your application (like https://redisdemo-10-shy-zebra.cfapps.io)
+1. Press the "Start" button. You should see random traffic being generated to the application. You should also see the all traffic is routed to instance 0
+1. Scale the app by entering the command `cf scale RedisDemo-1.0 -i 2` - this will request two instances of the app running. Eventually you should see traffic being routed to the two app instances. Notice that the hit count is not consistent. Why?
+1. If you press the "Crash It!" button on the client page, then one of the app instances will crash. Which one depends on how the request was routed. Cloud Foundry will notice that an instance has crashed and will start a new instance automatically - this may take a few minutes to show
+1. You can scale the app back down by entering `cf scale RedisDemo-1.0 -i 1`
+
+You should have noticed that the hit counter is not consistent among the instances, and that it is reset when an app instance crashes. This will demonstrate the idea of epehemeral containers and that Cloud Foundry is designed for stateless applications. We will store the hit count in an external Redis cache in the next section to correct this issue.
 
 ## Configure Redis on Cloud Foundry
 
 ### Create a Redis Cache Instance
 
-1. Login to Pivotal Apps Manager
+1. Login to Pivotal Apps Manager at https://run.pivotal.io/
 1. Navigate to your org/space
 1. Select the "services" tab
 1. Press the "Add a Service" button
@@ -515,18 +617,20 @@ TODO TODO
     public class RedisHitCounterService implements HitCounterService {
 
         private static final String REDIS_KEY = "payment-calculator";
+        private static final int DEFAULT_VALUE = 5000;
 
         @Autowired
         private RedisTemplate<String, Integer> redisTemplate;
-    
+
         @Override
         public long incrementCounter() {
-            return redisTemplate.opsForValue().increment(REDIS_KEY, 1);
+            redisTemplate.opsForValue().setIfAbsent(REDIS_KEY, DEFAULT_VALUE);
+            return redisTemplate.opsForValue().increment(REDIS_KEY);
         }
 
         @Override
         public void resetCount() {
-            redisTemplate.opsForValue().set(REDIS_KEY, 5000);
+            redisTemplate.opsForValue().set(REDIS_KEY, DEFAULT_VALUE);
         }
     }
     ```
@@ -553,7 +657,7 @@ TODO TODO
         @Bean
         public RedisTemplate<String, Integer> redisTemplate(RedisConnectionFactory redisFactory) {
             RedisTemplate<String, Integer> template = new RedisTemplate<>();
-            template.setConnectionFactory(redisFactory;
+            template.setConnectionFactory(redisFactory);
             template.setValueSerializer(new GenericToStringSerializer<>(Integer.class));
             return template;
         }
