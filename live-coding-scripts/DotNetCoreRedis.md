@@ -25,23 +25,12 @@ This exercise will cover the following:
 
 ### Obtain PCF Credentials
 
-If you are using your own installation of PCF, then obtain credentials and API enpoint information from your PCF platform team. If you are using Pivotal Web Services (the public PCF instance hosted by Pivotal), follow thses steps:
+If you are using a private installation of PCF, then obtain credentials and API enpoint information from your PCF platform team. If you are using Pivotal Web Services (the public PCF instance hosted by Pivotal), then go to [https://run.pivotal.io/](https://run.pivotal.io/) and register for a free account.
 
-1. Open the page https://run.pivotal.io/ and register for a free account
+Once you have credentials, login with the CLI...
+
 1. Open a terminal or command window and login to PCF with the command `cf login -a api.run.pivotal.io` (or whatever API endpoint you are using if not Pivotal Web Services)
-1. Enter the email you registered with and the password you set
-
-### Create a Redis Cache Instance
-
-1. Login to Pivotal Apps Manager
-1. Navigate to your org/space
-1. Select the "services" tab
-1. Press the "Add a Service" button
-1. Create a new service...
-   - (With the Azure Service Broker)
-   - Select "Azure Redis Cache"
-   - Select plan type "Basic C0"
-   - name the instance "xxxredis" where "xxx" are your initials
+1. Enter the email you registered and the password you set
 
 ## Build a Simple Web Service
 
@@ -50,13 +39,19 @@ If you are using your own installation of PCF, then obtain credentials and API e
     mkdir PaymentService
     cd PaymentService
     dotnet new webapi
+    dotnet add package Swashbuckle.AspNetCore
+    dotnet add package Microsoft.Extensions.Caching.Redis
+    dotnet add package Steeltoe.Management.CloudFoundryCore
+    dotnet add package Steeltoe.Extensions.Configuration.CloudFoundryCore
+    dotnet add package Steeltoe.CloudFoundry.ConnectorCore
     code .
     ```
 1. Run the new web service with `dotnet run`, then navigate to https://localhost:5001/api/values
 
 1. Stop the service with `ctrl-c`
 
-1. Create a new "Services" directory, then add this class:
+1. Create a new `Services` directory
+1. Create a new class `PaymentService` in the `Services` directory, set its contents to the following:
 
     ```csharp
     using System;
@@ -101,7 +96,8 @@ If you are using your own installation of PCF, then obtain credentials and API e
     }
     ```
 
-1. Create a new "Models" directory, then add this class:
+1. Create a new `Models` directory
+1. Create a new class `CalculatedPayment` in the `Models` directory, set its contents to the following:
 
     ```csharp
     namespace PaymentService.Models
@@ -118,13 +114,15 @@ If you are using your own installation of PCF, then obtain credentials and API e
     }
     ```
 
-1. Create this class in the "Controllers" directory:
+1. Create a new class `PaymentController` in the `Controllers` directory, set its contents to the following:
 
     ```csharp
     using System;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Extensions.Options;
     using PaymentService.Models;
     using PaymentService.Services;
+    using Steeltoe.Extensions.Configuration.CloudFoundry;
 
     namespace PaymentService.Controllers
     {
@@ -132,31 +130,52 @@ If you are using your own installation of PCF, then obtain credentials and API e
         [ApiController]
         public class PaymentController
         {
-            private PaymentCalculator _PaymentCalculator;
-    
-            public PaymentController(PaymentCalculator PaymentCalculator)
+            private PaymentCalculator PaymentCalculator;
+            private CloudFoundryApplicationOptions AppOptions;
+
+            public PaymentController(PaymentCalculator paymentCalculator,
+                    IOptions<CloudFoundryApplicationOptions> appOptions)
             {
-                _PaymentCalculator = PaymentCalculator;
+                PaymentCalculator = paymentCalculator;
+                AppOptions = appOptions.Value;
             }
 
             [HttpGet]
-            public ActionResult<CalculatedPayment> calculatePayment(double Amount, double Rate, int Years)
+            public ActionResult<CalculatedPayment> calculatePayment(double Amount, double Rate, int Years) => new CalculatedPayment
             {
-                return new CalculatedPayment {
-                    Amount = Amount,
-                    Rate = Rate,
-                    Years = Years,
-                    Instance = Environment.GetEnvironmentVariable("CF_INSTANCE_INDEX"),
-                    Payment = _PaymentCalculator.Calculate(Amount, Rate, Years)
-                };
-            }
+                Amount = Amount,
+                Rate = Rate,
+                Years = Years,
+                Instance = AppOptions.InstanceId,
+                Payment = PaymentCalculator.Calculate(Amount, Rate, Years)
+            };
         }
     }
     ```
-1. Modify `Startup.cs` by adding the following line at the end of the `ConfigureServices` method:
+
+1. Modify `Startup.cs` by adding the following lines at the end of the `ConfigureServices` method:
 
     ```csharp
+    services.AddCors();
+    services.AddOptions();
+    services.ConfigureCloudFoundryOptions(Configuration);
     services.AddSingleton<PaymentCalculator>();
+    ```
+
+1. Modify `Startup.cs` by adding the following line in the `Configure` method prior to the existing line `app.UseHttpsRedirection();`:
+
+    ```csharp
+    app.UseCors(builder => builder.AllowAnyOrigin());
+    ```
+
+1. Modify `Program.cs` by modifying the `CreateWebHostBuilder` method so that it looks like this:
+
+    ```csharp
+    public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
+        WebHost.CreateDefaultBuilder(args)
+            .UseStartup<Startup>()
+            .UseCloudFoundryHosting()
+            .AddCloudFoundry();
     ```
 
 1. Start the application either with the debugger (F5), or by entering the command `dotnet run`
@@ -168,11 +187,6 @@ If you are using your own installation of PCF, then obtain credentials and API e
 ## Add Swagger
 
 Swagger is a REST documentation and UI tool, that also includes code generation tools for clients. For us, it will act as a very simple and almost free UI for the web service we've just created. There are two implementations of swagger: Swashbuckle and NSwag. For this exercise, we will use Swashbuckle.
-
-1. Add the Nuget package for Swashbuckle to the project:
-    ```shell
-    dotnet add package Swashbuckle.AspNetCore
-    ```
 
 1. Modify `Startup.cs`, add the following to the end of the `ConfigureServices` method:
 
@@ -213,12 +227,6 @@ Swagger is a REST documentation and UI tool, that also includes code generation 
 During the push process, PCF will create a route for the app. Make note of the route - you can acces the application at this URL once the application has started.
 
 ## Steeltoe Management Endpoints
-
-1. Add the Nuget package for Steeltoe to the project:
-    ```shell
-    dotnet add package Steeltoe.Management.CloudFoundryCore
-    dotnet add package Steeltoe.Extensions.Configuration.CloudFoundryCore
-    ```
 
 1. Modify `Startup.cs`, add the following to the end of the `ConfigureServices` method:
 
@@ -262,10 +270,6 @@ During the push process, PCF will create a route for the app. Make note of the r
 
 ## Steeltoe Service Connectors Part 1 - Add a Basic Hit Counter
 
-1. Add the Nuget package for Redis to the project:
-    ```shell
-    dotnet add package Microsoft.Extensions.Caching.Redis
-    ```
 1. If you are using Azure Redis Cache through the Azure Service Broker on PCF, then modify `appsettings.json` and add the following configuration:
 
     ```json
@@ -352,11 +356,6 @@ During the push process, PCF will create a route for the app. Make note of the r
 1. Test the application locally with swagger to make sure the hit count is incrementing
 
 ## Steeltoe Service Connectors Part 2 - Bind the Application to Redis on Cloud Coundry
-
-1. Add the Nuget package for Steeltoe Connectors to the project:
-    ```shell
-    dotnet add package Steeltoe.CloudFoundry.ConnectorCore
-    ```
 
 1. Add the following to the `ConfigureServices` method:
 
