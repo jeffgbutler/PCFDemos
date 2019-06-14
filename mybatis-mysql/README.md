@@ -2,9 +2,7 @@
 
 This example shows how to configure a MyBatis based Spring Boot application for deployment on Cloud Foundry. The application will use an in memory H2 database when not on cloud foundry.
 
-The main differences are as follows:
-
-1. When running locally, the `application-default.properties` file enables the H2 platform so that the schema-h2.sql and data-h2.sql files will be executed on startup
+When running locally, the `application-default.properties` file enables the H2 platform so that the `schema-h2.sql` and `data-h2.sql` files will be executed on startup
 
 If you want to recreate the database on Cloud Foundry, the application is known to work with a MySQL instance initialized with this table definition:
 
