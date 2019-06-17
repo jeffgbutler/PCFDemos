@@ -2,6 +2,8 @@
 
 This folder contains live coding scripts that can be used to demonstrate various aspects of Pivotal Cloud Foundry and Kubernetes. These scripts can also be used as instructions for developer workshops.
 
+If you have any difficulties with Java on Windows, see this page for some tips: [Java on Windows Tips](JavaInstallOnWindows.md)
+
 ## Cloud Foundry
 
 ### Java/Spring Boot
