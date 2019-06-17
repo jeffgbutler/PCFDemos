@@ -6,21 +6,23 @@
 1. Create a Maven project with Java and the latest version of Spring Boot (2.1.1 at the time of writing)
 1. Specify group: `microservice.workshop`
 1. Specify artifact: `jpa-demo`
+1. Specify packaging: Jar
+1. Specify Java Version to match what you have installed
 1. For dependencies, add the following:
-    - Web
-    - Actuator
-    - JPA
-    - H2
+    - Spring Web Starter
+    - Spring Boot Actuator
+    - Spring Data JPA
+    - H2 Database
 1. Generate the project (causes a download)
 1. Unzip the downloaded file somewhere convenient
 1. Add the new project to your IDE workspace
     - Eclipse: File->Import->Existing Maven Project
     - IntelliJ: File->New->Module From Existing Sources...
-    - VS Code: File->Add Folder to Workspace
-1. Rename `application.properties` in `src/main/resources` to `application.yml`
+    - VS Code: File->Add Folder to Workspace (or just open the folder by navigating to it and entering the command `code .`)
 
 ## Configure The Info Actuator
 
+1. Rename `application.properties` in `src/main/resources` to `application.yml`
 1. Open `application.yml` in `src/main/resources`
 1. Add this value
 
@@ -34,6 +36,18 @@
         health:
           show-details: always
     ```
+
+1. Create a file called `application-default.yml` in `src/main/resources`
+1. Set its content to the following:
+
+    ```yml
+    spring:
+      h2:
+        console:
+          enabled: true
+    ```
+
+    This will tell Spring Boot to enable the H2 database console when running locally. 
 
 
 ## Configure Swagger
@@ -117,7 +131,7 @@
         private String firstName;
         private String lastName;
 
-        // getters/setters
+        // TODO: add getters and setters for all fields...
     }
     ```
 
@@ -129,11 +143,14 @@
     package microservice.workshop.jpademo.data;
 
     import java.util.List;
+    import java.util.Optional;
+
     import org.springframework.data.jpa.repository.JpaRepository;
     import microservice.workshop.jpademo.model.Person;
 
     public interface PersonRepository extends JpaRepository<Person, Integer> {
-        List<Person> findByLastName(String lastName);    
+        List<Person> findByLastName(String lastName);
+        Optional<Person> findByFirstNameAndLastName(String firstName, String lastName);
     }
     ```
 1. Create a file called `import.sql` in `src/main/resources`. Set the contents to the following:
@@ -155,13 +172,23 @@
     package microservice.workshop.jpademo.http;
 
     import java.util.List;
+    import java.util.Optional;
+
     import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.http.HttpHeaders;
+    import org.springframework.http.HttpStatus;
     import org.springframework.http.ResponseEntity;
+    import org.springframework.web.bind.annotation.DeleteMapping;
     import org.springframework.web.bind.annotation.GetMapping;
     import org.springframework.web.bind.annotation.PathVariable;
+    import org.springframework.web.bind.annotation.PostMapping;
+    import org.springframework.web.bind.annotation.PutMapping;
+    import org.springframework.web.bind.annotation.RequestBody;
     import org.springframework.web.bind.annotation.RequestMapping;
     import org.springframework.web.bind.annotation.RequestParam;
     import org.springframework.web.bind.annotation.RestController;
+    import org.springframework.web.util.UriComponentsBuilder;
+
     import microservice.workshop.jpademo.data.PersonRepository;
     import microservice.workshop.jpademo.model.Person;
 
@@ -176,7 +203,7 @@
         public ResponseEntity<List<Person>> findAll() {
             return ResponseEntity.ok(personRepository.findAll());
         }
-    
+
         @GetMapping("/{id}")
         public ResponseEntity<Person> findById(@PathVariable("id") Integer id) {
             return ResponseEntity.of(personRepository.findById(id));
@@ -185,6 +212,38 @@
         @GetMapping("/search")
         public ResponseEntity<List<Person>> search(@RequestParam("lastName") String lastName) {
             return ResponseEntity.ok(personRepository.findByLastName(lastName));
+        }
+
+        @PostMapping
+        public ResponseEntity<?> insert(@RequestBody Person person, UriComponentsBuilder ucBuilder) {
+            Optional<Person> op = personRepository.findByFirstNameAndLastName(person.getFirstName(), person.getLastName());
+            if (op.isPresent()) {
+                return new ResponseEntity<>(HttpStatus.CONFLICT);
+            }
+
+            person = personRepository.save(person);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setLocation(ucBuilder.path("/person/{id}").buildAndExpand(person.getId()).toUri());
+            return new ResponseEntity<>(headers, HttpStatus.CREATED);
+        }
+
+        @PutMapping("/{id}")
+        public ResponseEntity<Person> update(@PathVariable("id") Integer id, @RequestBody Person person) {
+            return personRepository.findById(id).map(p -> {
+                p.setLastName(person.getFirstName());
+                p.setLastName(person.getLastName());
+                personRepository.save(p);
+                return new ResponseEntity<>(p, HttpStatus.OK);
+            }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        }
+
+        @DeleteMapping("/{id}")
+        public ResponseEntity<?> delete(@PathVariable("id") Integer id) {
+            return personRepository.findById(id).map(p -> {
+                personRepository.delete(p);
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
         }
     }
     ```
@@ -279,6 +338,7 @@
 1. Test Swagger [http://localhost:8080](http://localhost:8080)
 1. Test the acuator health endpoint [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
 1. Test the acuator info endpoint [http://localhost:8080/actuator/info](http://localhost:8080/actuator/info)
+1. Access the H2 console at [http://localhost:8080/h2-console](http://localhost:8080/h2-console)
 
 ## Configure for Cloud Foundry
 
@@ -288,10 +348,10 @@
     1. Select the "services" tab
     1. Press the "Add a Service" button
     1. Create a new service...
-        - (With the Azure Service Broker)
-        - Select "Azure SQL Database Service"
-        - Select plan type "Basic"
+        - Select "ClearDB MySQL Database"
+        - Select plan type "Spark DB"
         - name the instance "xxxsql" where "xxx" are your initials
+
 
 1. Create and open a file `application-cloud.yml` in `src/main/resources`
 1. Add this value
@@ -311,11 +371,15 @@
     ```yaml
     applications:
     - name: SpringBoot-JPA
-      path: target/springboot-demo-0.0.1-SNAPSHOT.jar
+      path: target/jpa-demo-0.0.1-SNAPSHOT.jar
       random-route: true
+      env:
+        JBP_CONFIG_OPEN_JDK_JRE: '{jre: {version: 12.+}}'
       services:
       - xxxsql
     ```
+
+    Note that this manifest specifies JRE 12+. This is not required if you are using Java 8 (the Java buildpack default). If you are using Java 11, you can change the environment variable accordingly. 
 
 1. Build the application:
     - (Windows Command Prompt) `mvnw clean package`
