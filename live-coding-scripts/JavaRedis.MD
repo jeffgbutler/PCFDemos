@@ -46,7 +46,7 @@ Once you have credentials, login with the CLI...
 1. Add the new project to your IDE workspace
     - Eclipse: File->Import->Existing Maven Project
     - IntelliJ: File->New->Module From Existing Sources...
-    - VS Code: File->Add Folder to Workspace (or just open the folde by navigating to it and entering the command `code .`)
+    - VS Code: File->Add Folder to Workspace (or just open the folder by navigating to it and entering the command `code .`)
 
 ## Configure The Info Actuator
 
