@@ -34,6 +34,8 @@ Once you have credentials, login with the CLI...
 
 ## Build a Simple Web Service
 
+### Create the Basic Project
+
 1. Create a basic web service project and open it in VS Code
     ```shell
     mkdir PaymentService
@@ -46,9 +48,11 @@ Once you have credentials, login with the CLI...
     dotnet add package Steeltoe.CloudFoundry.ConnectorCore
     code .
     ```
-1. Run the new web service with `dotnet run`, then navigate to https://localhost:5001/api/values
+1. Run the new web service with `dotnet run` (or just press F5 in Visual Studio/Code), then navigate to https://localhost:5001/api/values
 
-1. Stop the service with `ctrl-c`
+1. Stop the service with `ctrl-c` (or press the stop button in Visual Studio/Code)
+
+### Add a Payment Calculator
 
 1. Create a new `Services` directory
 1. Create a new class `PaymentService` in the `Services` directory, set its contents to the following:
@@ -96,6 +100,45 @@ Once you have credentials, login with the CLI...
     }
     ```
 
+### Add a Hit Counter
+
+1. Create a new interface `IHitCountService` in the `Services` directory, set its contents to the following:
+
+    ```csharp
+    namespace PaymentService.Services
+    {
+        public interface IHitCountService
+        {
+            long GetAndIncrement();
+            void Reset();
+        }
+    }
+    ```
+
+1. Create a new Class `MemoryHitCountService` in the `Services` directory, set its contents to the following:
+
+    ```csharp
+    namespace PaymentService.Services
+    {
+        public class MemoryHitCountService: IHitCountService
+        {
+            private long HitCount = 0;
+            public long GetAndIncrement()
+            {
+                return ++HitCount;
+            }
+
+            public void Reset()
+            {
+                HitCount = 0;
+            }
+        }
+    }
+    ```
+
+
+### Add a Basic Domain Object
+
 1. Create a new `Models` directory
 1. Create a new class `CalculatedPayment` in the `Models` directory, set its contents to the following:
 
@@ -113,6 +156,8 @@ Once you have credentials, login with the CLI...
         }
     }
     ```
+
+### Create a REST Controller
 
 1. Create a new class `PaymentController` in the `Controllers` directory, set its contents to the following:
 
@@ -132,12 +177,15 @@ Once you have credentials, login with the CLI...
         {
             private PaymentCalculator PaymentCalculator;
             private CloudFoundryApplicationOptions AppOptions;
+            private IHitCountService HitCountService;
 
             public PaymentController(PaymentCalculator paymentCalculator,
-                    IOptions<CloudFoundryApplicationOptions> appOptions)
+                    IOptions<CloudFoundryApplicationOptions> appOptions,
+                    IHitCountService hitCountService)
             {
                 PaymentCalculator = paymentCalculator;
                 AppOptions = appOptions.Value;
+                HitCountService = hitCountService;
             }
 
             [HttpGet]
@@ -146,12 +194,15 @@ Once you have credentials, login with the CLI...
                 Amount = Amount,
                 Rate = Rate,
                 Years = Years,
-                Instance = AppOptions.InstanceId,
+                Instance = AppOptions.InstanceIndex.ToString(),
+                Count = HitCountService.GetAndIncrement(),
                 Payment = PaymentCalculator.Calculate(Amount, Rate, Years)
             };
         }
     }
     ```
+
+### Setup Dependency Injection and the MVC Pipeline
 
 1. Modify `Startup.cs` by adding the following lines at the end of the `ConfigureServices` method:
 
@@ -160,6 +211,7 @@ Once you have credentials, login with the CLI...
     services.AddOptions();
     services.ConfigureCloudFoundryOptions(Configuration);
     services.AddSingleton<PaymentCalculator>();
+    services.AddSingleton<IHitCountService, MemoryHitCountService>();
     ```
 
 1. Modify `Startup.cs` by adding the following line in the `Configure` method prior to the existing line `app.UseHttpsRedirection();`:
@@ -268,7 +320,9 @@ During the push process, PCF will create a route for the app. Make note of the r
 
 1. `cf push`
 
-## Steeltoe Service Connectors Part 1 - Add a Basic Hit Counter
+1. Test the actuators in the cloud foundry UI
+
+## Steeltoe Service Connectors Part 1 - Add a Redis Based Hit Counter
 
 1. If you are using Azure Redis Cache through the Azure Service Broker on PCF, then modify `appsettings.json` and add the following configuration:
 
@@ -280,34 +334,14 @@ During the push process, PCF will create a route for the app. Make note of the r
     }
     ```
 
-1. Create a file called `HitCounter.cs` in the `Services` folder. Set it's contents to the following:
+1. Create a class `RedisHitCountService` in the `Services` folder. Set it's contents to the following:
 
     ```csharp
     using StackExchange.Redis;
 
     namespace PaymentService.Services
     {
-        public interface IIHitCountService
-        {
-            long GetAndIncrement();
-            void Reset();
-        }
-
-        public class MemoryHitCountService: IIHitCountService
-        {
-            private long HitCount = 0;
-            public long GetAndIncrement()
-            {
-                return ++HitCount;
-            }
-
-            public void Reset()
-            {
-                HitCount = 0;
-            }
-        }
-
-        public class RedisHitCountService: IIHitCountService
+        public class RedisHitCountService: IHitCountService
         {
             private IConnectionMultiplexer _conn;
             public RedisHitCountService (IConnectionMultiplexer conn)
@@ -331,29 +365,22 @@ During the push process, PCF will create a route for the app. Make note of the r
     ```
 
 1. Modify the constructor in `Startup.cs` to accept and keep the `IHostingEnvironment`
+   - Create an instance variable `private IHostingEnvironment Env`
+   - Add a parameter the contructor `IHostingEnvironment env`
+   - Add `Env = env;` to the constructor body
 
-1. Add the following to the `ConfigureServices` method:
+1. Change the `ConfigureServices` method so that the memory based hit counter is used in the development environment and the Redis based hit counter is used in other environments:
 
     ```csharp
-    if (env.IsDevelopment())
+    if (Env.IsDevelopment())
     {
-        services.AddSingleton<IIHitCountService, MemoryHitCountService>();
+        services.AddSingleton<IHitCountService, MemoryHitCountService>();
     }
     else
     {
-        services.AddSingleton<IIHitCountService, RedisHitCountService>();
+        services.AddSingleton<IHitCountService, RedisHitCountService>();
     }
     ```
-
-1. Modify the constructor for `PaymentController` to accept and keep an instance of `IHitCountService`
-
-1. Modify the `calculatePayment` method in `PaymentController` to set the hit count into the result object:
-
-    ```csharp
-    rv.Count = _HitCountService.GetAndIncrement();
-    ```
-
-1. Test the application locally with swagger to make sure the hit count is incrementing
 
 ## Steeltoe Service Connectors Part 2 - Bind the Application to Redis on Cloud Coundry
 
