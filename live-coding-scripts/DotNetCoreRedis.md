@@ -224,7 +224,7 @@ Swagger is a REST documentation and UI tool, that also includes code generation 
 
 1. `cf push`
 
-During the push process, PCF will create a route for the app. Make note of the route - you can acces the application at this URL once the application has started.
+During the push process, PCF will create a route for the app. Make note of the route - you can access the application at this URL once the application has started.
 
 ## Steeltoe Management Endpoints
 
