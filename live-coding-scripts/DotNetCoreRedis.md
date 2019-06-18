@@ -286,7 +286,7 @@ During the push process, PCF will create a route for the app. Make note of the r
     services.AddCloudFoundryActuators(Configuration);
     ```
 
-1. Modify `Startup.cs`, add the following to the end of the `Configure` method before the Swagger middleware:
+1. Modify `Startup.cs`, add the following to the end of the if statement in the `Configure` method where the application is not running in the development environment (after the `UseHsts()` call). There is a bug in Steeltoe 2.2 that prevents running the health actuator locally:
 
     ```csharp
     app.UseCloudFoundryActuators();
@@ -296,13 +296,20 @@ During the push process, PCF will create a route for the app. Make note of the r
 
     ```csharp
     .UseStartup<Startup>() // existing
-    .AddCloudFoundry()
+    .AddCloudFoundryHosting() //existing
+    .AddCloudFoundry() //existing
     .ConfigureLogging((builderContext, loggingBuilder) =>
     {
         loggingBuilder.AddConfiguration(builderContext.Configuration.GetSection("Logging"));
         loggingBuilder.AddDynamicConsole();
         loggingBuilder.AddDebug();
     });
+    ```
+    You may need to manually add the following `using` statements:
+
+    ```csharp
+    using Microsoft.Extensions.Logging;
+    using Steeltoe.Extensions.Logging;
     ```
 
 1. Modify `appsettings.json` and add the following configuration:
