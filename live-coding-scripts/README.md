@@ -13,6 +13,12 @@ Script | Description
 [Java and JPA](JavaJPA.MD)| Simple JPA app. Uses H2 in-memory database locally, binds to an RDB in Cloud Foundry 
 [Java and Redis](JavaRedis.MD) | Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
 
+### Kotlin/Spring Boot
+
+Script | Description
+--|--
+[Kotlin and Redis](KotlinRedis.MD) | Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
+
 ### C#/.Net Core / Steeltoe
 
 Script | Description
