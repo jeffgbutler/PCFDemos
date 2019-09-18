@@ -73,9 +73,14 @@ Once you have credentials, login with the CLI...
       autoconfigure:
         exclude:
           - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: '*'
     ```
 
-    This will tell SpringBoot not to configure Redis when we're running locally - even though Redis is on the classpath. Failure to do this will not stop the application from starting and running successfully. But the health actuator will show the application being down. 
+    This will tell SpringBoot not to configure Redis when we're running locally - even though Redis is on the classpath. Failure to do this will not stop the application from starting and running successfully. But the health actuator will show the application being down. This also enables all the actuators when running locally.
 
 1. Create a file called `application-cloud.yml` in `src/main/resources`
 1. Set its content to the following:
@@ -91,11 +96,24 @@ Once you have credentials, login with the CLI...
 
 ## Configure Swagger
 
-1. Open `build.gradle.kts`, add the following dependencies:
+1. Open `build.gradle.kts`, add the following plugin, Spring Boot configuration, and dependencies:
 
     ```kotlin
-	implementation("io.springfox:springfox-swagger2:2.9.2")
-	implementation("io.springfox:springfox-swagger-ui:2.9.2")
+    plugins {
+        // existing
+      	id("com.gorylenko.gradle-git-properties") version "2.1.0"
+    }
+
+    // new...
+    springBoot {
+    	buildInfo()
+    }
+
+    dependencies {
+        // exitsing
+    	implementation("io.springfox:springfox-swagger2:2.9.2")
+	    implementation("io.springfox:springfox-swagger-ui:2.9.2")
+    }
     ```
 
 1. Create a class `SwaggerConfiguration` in the `micoservice.workshop.kotlinredisdemo` package. Set its contents to the following:
@@ -260,9 +278,6 @@ Once you have credentials, login with the CLI...
     @RestController
     @RequestMapping("/payment")
     class PaymentController(private val hitCounterService: HitCounterService, private val paymentService: PaymentService) {
-
-        private val logger = LoggerFactory.getLogger(PaymentController::class.java)
-
         @Value("\${cloud.application.instance_index:local}")
         private lateinit var instance: String
 
@@ -276,6 +291,10 @@ Once you have credentials, login with the CLI...
                 payment, amount, rate, years)
 
             return CalculatedPayment(amount, rate, years, payment, instance, hitCounterService.incrementCounter())
+        }
+
+        companion object {
+            val logger = LoggerFactory.getLogger(PaymentController::class.java)
         }
     }
     ```
