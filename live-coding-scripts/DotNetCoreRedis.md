@@ -278,7 +278,7 @@ Swagger is a REST documentation and UI tool, that also includes code generation 
 
 ## Deploy to Pivotal Cloud Foundry
 
-1. Create a file `manifest.yml` in the project root directory. Set it's contents to the following:
+1. Create a file `manifest.yml` in the project root directory. Set its contents to the following:
 
     ```yaml
     applications:
@@ -371,7 +371,7 @@ During the push process, PCF will create a route for the app. Make note of the r
     }
     ```
 
-1. Create a class `RedisHitCountService` in the `Services` folder. Set it's contents to the following:
+1. Create a class `RedisHitCountService` in the `Services` folder. Set its contents to the following:
 
     ```csharp
     using StackExchange.Redis;
