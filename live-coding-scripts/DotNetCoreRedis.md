@@ -357,6 +357,10 @@ During the push process, PCF will create a route for the app. Make note of the r
 
 ## Steeltoe Service Connectors - Add a Redis Based Hit Counter
 
+1. Create an Redis service instance in your PCF space. Name the service instance `xxxredis` where "xxx" is your initials
+
+    - On Pivotal Web Services, add a Redis Cloud instance using the 30MB (free) plan
+
 1. If you are using Azure Redis Cache through the Azure Service Broker on PCF, then modify `appsettings.json` and add the following configuration:
 
     ```json
