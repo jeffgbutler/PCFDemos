@@ -46,6 +46,7 @@ Once you have credentials, login with the CLI...
     dotnet add package Steeltoe.Management.CloudFoundryCore
     dotnet add package Steeltoe.Extensions.Configuration.CloudFoundryCore
     dotnet add package Steeltoe.CloudFoundry.ConnectorCore
+    dotnet add package Steeltoe.Extensions.Logging.DynamicLogger
     code .
     ```
 1. Run the new web service with `dotnet run` (or just press F5 in Visual Studio/Code), then navigate to https://localhost:5001/api/values
@@ -162,8 +163,8 @@ Once you have credentials, login with the CLI...
 1. Create a new class `PaymentController` in the `Controllers` directory, set its contents to the following:
 
     ```csharp
-    using System;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using PaymentService.Models;
     using PaymentService.Services;
@@ -179,25 +180,36 @@ Once you have credentials, login with the CLI...
             private CloudFoundryApplicationOptions AppOptions;
             private IHitCountService HitCountService;
 
+            private readonly ILogger _logger;
+        
             public PaymentController(PaymentCalculator paymentCalculator,
                     IOptions<CloudFoundryApplicationOptions> appOptions,
-                    IHitCountService hitCountService)
+                    IHitCountService hitCountService,
+                    ILogger<PaymentController> logger)
             {
                 PaymentCalculator = paymentCalculator;
                 AppOptions = appOptions.Value;
                 HitCountService = hitCountService;
+                _logger = logger;
             }
 
             [HttpGet]
-            public ActionResult<CalculatedPayment> calculatePayment(double Amount, double Rate, int Years) => new CalculatedPayment
-            {
-                Amount = Amount,
-                Rate = Rate,
-                Years = Years,
-                Instance = AppOptions.InstanceIndex.ToString(),
-                Count = HitCountService.GetAndIncrement(),
-                Payment = PaymentCalculator.Calculate(Amount, Rate, Years)
-            };
+            public ActionResult<CalculatedPayment> calculatePayment(double Amount, double Rate, int Years) {
+                var Payment = PaymentCalculator.Calculate(Amount, Rate, Years);
+
+                _logger.LogDebug("Calculated payment of {Payment} for input amount: {Amount}, rate: {Rate}, years: {Years}",
+                    Payment, Amount, Rate, Years);
+
+                return new CalculatedPayment
+                {
+                    Amount = Amount,
+                    Rate = Rate,
+                    Years = Years,
+                    Instance = AppOptions.InstanceIndex.ToString(),
+                    Count = HitCountService.GetAndIncrement(),
+                    Payment = Payment
+                };
+            }
         }
     }
     ```
@@ -286,7 +298,7 @@ During the push process, PCF will create a route for the app. Make note of the r
     services.AddCloudFoundryActuators(Configuration);
     ```
 
-1. Modify `Startup.cs`, add the following to the end of the if statement in the `Configure` method where the application is not running in the development environment (after the `UseHsts()` call). There is a bug in Steeltoe 2.2 that prevents running the health actuator locally:
+1. Modify `Startup.cs`, add the following to `Configure` method before the `app.UseCors()` call:
 
     ```csharp
     app.UseCloudFoundryActuators();
@@ -312,14 +324,28 @@ During the push process, PCF will create a route for the app. Make note of the r
     using Steeltoe.Extensions.Logging;
     ```
 
-1. Modify `appsettings.json` and add the following configuration:
+1. Modify `appsettings.json` and add the following:
 
     ```json
-    "management": {
-      "endpoints": {
-        "path": "/cloudfoundryapplication",
-        "cloudfoundry": {
-          "validateCertificates": false
+    "info": {
+      "app": {
+        "name": ".Net Core Payment Calculator"
+      }
+    }
+    ```
+
+1. Start the application. You should be able to access the management enpoints at https://localhost:5001/actuator
+
+1. Create a new file `appsettings.Production.json` in the project root directory. Set the contents to the following:
+
+    ```json
+    {
+      "management": {
+        "endpoints": {
+          "path": "/cloudfoundryapplication",
+          "cloudfoundry": {
+            "validateCertificates": false
+          }
         }
       }
     } 
@@ -327,9 +353,9 @@ During the push process, PCF will create a route for the app. Make note of the r
 
 1. `cf push`
 
-1. Test the actuators in the cloud foundry UI
+1. Test the management endpoints in PCF application manager
 
-## Steeltoe Service Connectors Part 1 - Add a Redis Based Hit Counter
+## Steeltoe Service Connectors - Add a Redis Based Hit Counter
 
 1. If you are using Azure Redis Cache through the Azure Service Broker on PCF, then modify `appsettings.json` and add the following configuration:
 
@@ -371,10 +397,17 @@ During the push process, PCF will create a route for the app. Make note of the r
     }
     ```
 
-1. Modify the constructor in `Startup.cs` to accept and keep the `IHostingEnvironment`
-   - Create an instance variable `private IHostingEnvironment Env`
-   - Add a parameter the contructor `IHostingEnvironment env`
-   - Add `Env = env;` to the constructor body
+1. Modify the constructor in `Startup.cs` to accept and keep the `IHostingEnvironment`. The modified constructor and new instance variable look like this:
+
+    ```csharp
+    public Startup(IConfiguration configuration, IHostingEnvironment env)
+    {
+        Configuration = configuration;
+        Env = env;
+    }
+
+    public IHostingEnvironment Env {get; }
+    ```
 
 1. Change the `ConfigureServices` method so that the memory based hit counter is used in the development environment and the Redis based hit counter is used in other environments:
 
@@ -385,16 +418,9 @@ During the push process, PCF will create a route for the app. Make note of the r
     }
     else
     {
+        services.AddRedisConnectionMultiplexer(Configuration);
         services.AddSingleton<IHitCountService, RedisHitCountService>();
     }
-    ```
-
-## Steeltoe Service Connectors Part 2 - Bind the Application to Redis on Cloud Coundry
-
-1. Add the following to the `ConfigureServices` method:
-
-    ```csharp
-    services.AddRedisConnectionMultiplexer(Configuration);
     ```
 
 1. Modify `manifest.yml` to add the service binding (change the app version, and specify the correct name of the redis instance you created above):
