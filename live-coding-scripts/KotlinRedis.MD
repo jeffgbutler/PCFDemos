@@ -32,7 +32,7 @@ Once you have credentials, login with the CLI...
 ## Create the Basic Application
 
 1. Navigate to [https://start.spring.io](https://start.spring.io)
-1. Create a Gradle project with Kotlin and the latest version of Spring Boot (2.1.8 at the time of writing)
+1. Create a Gradle project with Kotlin and the latest version of Spring Boot (2.2.0 at the time of writing)
 1. Specify group: `microservice.workshop`
 1. Specify artifact: `kotlin-redis-demo`
 1. Specify packaging: Jar
@@ -94,24 +94,35 @@ Once you have credentials, login with the CLI...
 
     This will tell SpringBoot not to configure Redis when we're running in the cloud - even though Redis is on the classpath. We will remove this file once we're ready to work with Redis. 
 
-## Configure Swagger
+## Configure Git for the Actuator (Optional)
 
 1. Open `build.gradle.kts`, add the following plugin, Spring Boot configuration, and dependencies:
 
     ```kotlin
     plugins {
         // existing
-      	id("com.gorylenko.gradle-git-properties") version "2.1.0"
+        id("com.gorylenko.gradle-git-properties") version "2.1.0"
     }
 
     // new...
     springBoot {
-    	buildInfo()
+        buildInfo()
     }
+    ```
 
+1. Open a command window and change to the root directory of the application
+1. Enter `git init`
+1. Enter `git add .`
+1. Enter `git commit -m "First Commit"`
+
+## Configure Swagger
+
+1. Open `build.gradle.kts`, add the following plugin, Spring Boot configuration, and dependencies:
+
+    ```kotlin
     dependencies {
-        // exitsing
-    	implementation("io.springfox:springfox-swagger2:2.9.2")
+        // existing
+        implementation("io.springfox:springfox-swagger2:2.9.2")
 	    implementation("io.springfox:springfox-swagger-ui:2.9.2")
     }
     ```
@@ -164,9 +175,11 @@ Once you have credentials, login with the CLI...
     ```kotlin
     package microservice.workshop.kotlinredisdemo.service
 
+    import org.springframework.stereotype.Service
     import java.math.BigDecimal
     import java.math.RoundingMode
 
+    @Service
     class PaymentService {
         fun calculate(amount: Double, rate: Double, years: Int) =
             if (rate == 0.0) {
@@ -200,11 +213,14 @@ Once you have credentials, login with the CLI...
     ```kotlin
     package microservice.workshop.kotlinredisdemo.service
 
+    import org.springframework.stereotype.Service
+
     interface HitCounterService {
         fun incrementCounter(): Long
         fun resetCount()
     }
 
+    @Service
     class MemoryHitCounterService: HitCounterService {
         private var hitCount: Long = 0
 
@@ -224,9 +240,11 @@ Once you have credentials, login with the CLI...
     ```kotlin
     package microservice.workshop.kotlinredisdemo.service
 
+    import org.springframework.stereotype.Service
     import java.util.concurrent.*
     import kotlin.system.exitProcess
 
+    @Service
     class CrashService {
         private val executor = Executors.newScheduledThreadPool(1)
 
@@ -357,22 +375,6 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
     }
     ```
 
-## Setup Dependency Injection
-
-1. Open the file `KotlinRedisDemoApplication.kt` in the package `microservice.workshop.kotlinredisdemo`
-1. Add the following methods to the `KotlinRedisDemoApplication` class:
-
-    ```kotlin
-    @Bean
-    fun paymentService() = PaymentService()
-
-    @Bean
-    fun hitCounterService() = MemoryHitCounterService()
-
-    @Bean
-    fun crashService() = CrashService()
-    ```
-
 ## Unit Tests
 
 1. Make a new package `microservice.workshop.kotlinredisdemo.http` in the `src/test/kotlin` tree
@@ -383,21 +385,21 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
     package microservice.workshop.kotlinredisdemo.http
 
     import org.hamcrest.Matchers.`is`
-    import org.junit.Before
-    import org.junit.Test
-    import org.junit.runner.RunWith
+    import org.junit.jupiter.api.BeforeEach
+    import org.junit.jupiter.api.Test
+    import org.junit.jupiter.api.extension.ExtendWith
     import org.springframework.beans.factory.annotation.Autowired
     import org.springframework.boot.test.context.SpringBootTest
     import org.springframework.http.HttpStatus
     import org.springframework.http.MediaType
-    import org.springframework.test.context.junit4.SpringRunner
+    import org.springframework.test.context.junit.jupiter.SpringExtension
     import org.springframework.test.web.servlet.MockMvc
     import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
     import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
     import org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup
     import org.springframework.web.context.WebApplicationContext
 
-    @RunWith(SpringRunner::class)
+    @ExtendWith(SpringExtension::class)
     @SpringBootTest
     class PaymentControllerTest {
         private lateinit var mockMvc: MockMvc
@@ -405,7 +407,7 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
         @Autowired
         private lateinit var webApplicationContext: WebApplicationContext
 
-        @Before
+        @BeforeEach
         fun setup() {
             this.mockMvc = webAppContextSetup(webApplicationContext).build()
         }
@@ -414,45 +416,45 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
         @Throws(Exception::class)
         fun testWithInterest() {
             mockMvc.perform(get("/resetCount"))
-                .andExpect(status().`is`(HttpStatus.OK.value()))
+                    .andExpect(status().`is`(HttpStatus.OK.value()))
 
             mockMvc.perform(get("/payment?amount=100000&rate=3.5&years=30"))
-                .andExpect(status().`is`(HttpStatus.OK.value()))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(jsonPath("$.payment", `is`(449.04)))
-                .andExpect(jsonPath("$.count", `is`(1)))
+                    .andExpect(status().`is`(HttpStatus.OK.value()))
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.payment", `is`(449.04)))
+                    .andExpect(jsonPath("$.count", `is`(1)))
         }
 
         @Test
         @Throws(Exception::class)
         fun testZeroInterest() {
             mockMvc.perform(get("/resetCount"))
-                .andExpect(status().`is`(HttpStatus.OK.value()))
+                    .andExpect(status().`is`(HttpStatus.OK.value()))
 
             mockMvc.perform(get("/payment?amount=100000&rate=0&years=30"))
-                .andExpect(status().`is`(HttpStatus.OK.value()))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(jsonPath("$.payment", `is`(277.78)))
-                .andExpect(jsonPath("$.count", `is`(1)))
+                    .andExpect(status().`is`(HttpStatus.OK.value()))
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.payment", `is`(277.78)))
+                    .andExpect(jsonPath("$.count", `is`(1)))
         }
 
         @Test
         @Throws(Exception::class)
         fun testThatHitCounterIncrements() {
             mockMvc.perform(get("/resetCount"))
-                .andExpect(status().`is`(HttpStatus.OK.value()))
+                    .andExpect(status().`is`(HttpStatus.OK.value()))
 
             mockMvc.perform(get("/payment?amount=100000&rate=3.5&years=30"))
-                .andExpect(status().`is`(HttpStatus.OK.value()))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(jsonPath("$.payment", `is`(449.04)))
-                .andExpect(jsonPath("$.count", `is`(1)))
+                    .andExpect(status().`is`(HttpStatus.OK.value()))
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.payment", `is`(449.04)))
+                    .andExpect(jsonPath("$.count", `is`(1)))
 
             mockMvc.perform(get("/payment?amount=100000&rate=0&years=30"))
-                .andExpect(status().`is`(HttpStatus.OK.value()))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(jsonPath("$.payment", `is`(277.78)))
-                .andExpect(jsonPath("$.count", `is`(2)))
+                    .andExpect(status().`is`(HttpStatus.OK.value()))
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.payment", `is`(277.78)))
+                    .andExpect(jsonPath("$.count", `is`(2)))
         }
     }
     ```
@@ -564,8 +566,12 @@ You should have noticed that the hit counter is not consistent among the instanc
     ```kotlin
     package microservice.workshop.kotlinredisdemo.service
 
+    import org.springframework.context.annotation.Profile
     import org.springframework.data.redis.core.RedisTemplate
+    import org.springframework.stereotype.Service
 
+    @Service
+    @Profile("cloud")
     class RedisHitCounterService(private val redisTemplate: RedisTemplate<String, Int>) : HitCounterService {
 
         override fun incrementCounter() =
@@ -589,7 +595,6 @@ You should have noticed that the hit counter is not consistent among the instanc
     ```kotlin
     package microservice.workshop.kotlinredisdemo
 
-    import microservice.workshop.kotlinredisdemo.service.RedisHitCounterService
     import org.springframework.context.annotation.Bean
     import org.springframework.context.annotation.Configuration
     import org.springframework.context.annotation.Profile
@@ -603,27 +608,25 @@ You should have noticed that the hit counter is not consistent among the instanc
 
         @Bean
         fun redisTemplate() =
-            with(RedisTemplate<String, Int>()) {
-                setConnectionFactory(redisFactory)
-                valueSerializer = GenericToStringSerializer(Int::class.java)
-                this
-            }
-
-        @Bean
-        fun hitCounterService() =
-            RedisHitCounterService(redisTemplate())
+                with(RedisTemplate<String, Int>()) {
+                    setConnectionFactory(redisFactory)
+                    valueSerializer = GenericToStringSerializer(Int::class.java)
+                    this
+                }
     }
     ```
 
     This configuration is enabled when the "cloud" profile is enabled only. On Cloud Foundry, the Java build pack enables this profile. When enabled, this configuration will create a Redis connection based on the Redis instance bound to the application.
 
-1. Open `KotlinRedisDemoApplication` in the `microservice.workshop.kotlinredisdemo` package
-1. Change the `hitCounterService` method so that it is only active when not on the cloud:
+1. Open `HitCounterService.kt` in the `microservice.workshop.kotlinredisdemo.service` package
+1. Change the `MemoryCounterService` so that it is only active when not on the cloud:
 
     ```kotlin
-    @Bean
+    @Service
     @Profile("!cloud")
-    fun hitCounterService() = MemoryHitCounterService()
+    class MemoryHitCounterService: HitCounterService {
+        ...
+    }
     ```
 
 1. Modify the file `manifest.yml` in the project root directory. Set it's contents to the following:
