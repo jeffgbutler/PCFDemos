@@ -1,4 +1,4 @@
-# Spring Boot and Redis Exercise
+# Spring Boot and Redis Exercise with Kotlin
 
 ## Pre-Requisites
 
@@ -9,16 +9,22 @@
 
 ### Install an IDE
 
-Install and configure a Java IDE you are comfortable with. Good options include:
+Install and configure a Kotlin capable IDE you are comfortable with. For Kotlin, we highly recommend using IntelliJ, but it is certainly possible to use others. Good options include:
 
-- Eclipse: https://www.eclipse.org/
 - IntelliJ: https://www.jetbrains.com/idea/
+- Eclipse: https://www.eclipse.org/
 - Visual Studio Code: https://visualstudio.microsoft.com/
+
+If you install Eclipse, then add the following plugins:
+
+- Kotlin plugin from JetBrains
+- Buildship Gradle Integration from the Eclipse Buildship Project
 
 If you install Visual Studio Code, then add the following extensions:
 
 - (Microsoft) Java Extension Pack
 - (Pivotal) Spring Boot Extension Pack
+- (fwcd) Kotlin
 
 ### Obtain PCF Credentials
 
@@ -44,8 +50,8 @@ Once you have credentials, login with the CLI...
 1. Generate the project (causes a download)
 1. Unzip the downloaded file somewhere convenient
 1. Add the new project to your IDE workspace
-    - Eclipse: File->Import->Existing Gradle Project
     - IntelliJ: File->New->Module From Existing Sources...
+    - Eclipse: File->Import->Existing Gradle Project
     - VS Code: File->Add Folder to Workspace (or just open the folder by navigating to it and entering the command `code .`)
 
 ## Configure The Info Actuator
