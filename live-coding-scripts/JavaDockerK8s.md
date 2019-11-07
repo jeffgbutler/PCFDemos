@@ -901,3 +901,70 @@ kubectl get service
 ```
 
 Access the app - in my case it was http://192.168.133.7:31407
+
+## Stand Up Redis in Kubernetes
+
+```bash
+kubectl run redis --image=redis
+kubectl expose deployment redis --type=ClusterIP --port=6379 --target-port=6379
+```
+
+This creates a single Pod deployment of Redis, and a ClusterIP based service. It also adds the service name ("redis") to the cluster DNS.
+
+## Modify the Deployment
+
+In the `deployment.yml` file, we need to do two things:
+
+1. Turn on the "cloud" profile
+1. Set the name of the redis server
+
+The modified file is as follows:
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    run: payment-service
+  name: payment-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      run: payment-service
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: payment-service
+    spec:
+      containers:
+      - image: jeffgbutler/payment-service:1.1
+        name: payment-service
+        args:
+          - "--spring.profiles.active=cloud"
+        imagePullPolicy: Always
+        env:
+        - name: redisServer
+          value: redis
+        - name: MY_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+```
+
+Update the deployment with the following command:
+
+```bash
+kubectl apply -f deployment.yml
+```
+
+Wait for all the pods to recycle, then verify that the app is now hitting the Redis server.
