@@ -493,7 +493,6 @@ We've got an executable JAR file, this is easy to put into a container. We'll sh
 
     ```Dockerfile
     FROM openjdk:8-jdk-alpine
-    VOLUME /tmp
     COPY target/*.jar app.jar
     EXPOSE 8080
     ENTRYPOINT ["java","-jar","/app.jar"]
