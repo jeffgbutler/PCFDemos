@@ -375,6 +375,11 @@ This is needed to demonstrate Kubernetes' self-healing capabilities.
     }
     ```
 
+## Setup SPA Client
+
+This repository includes a vue.js based single page application (SPA) that you can use to exercise the application. Copy the files [app.js](client/app.js) and [index.html](client/index.html) into the `src/main/resources/static` folder.
+
+
 ## Unit Tests
 
 1. Make a new package `microservice.workshop.k8sdemo.http` in the `src/test/java` tree
