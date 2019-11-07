@@ -19,7 +19,13 @@ If you install Visual Studio Code, then add the following extensions:
 
 Install Docker desktop from https://www.docker.com/products/docker-desktop
 
-### Install Minikube
+### Install the Kubernetes CLI
+
+Install the Kubernetes CLI (Kubectl) following instructions here: https://kubernetes.io/docs/tasks/tools/install-kubectl/
+
+### Install Minikube (Optional)
+
+This step is optional if you plan on using a Kubernetes cluster other than minikube.
 
 Follow the instructions for installing minikube here: https://kubernetes.io/docs/tasks/tools/install-minikube/
 
@@ -42,7 +48,7 @@ Follow the instructions for installing minikube here: https://kubernetes.io/docs
     - IntelliJ: File->New->Module From Existing Sources...
     - VS Code: File->Add Folder to Workspace (or just open the folder by navigating to it and entering the command `code .`)
 
-## Configure The Info Actuator
+## Initial Configuration
 
 1. Rename `application.properties` in `src/main/resources` to `application.yml`
 1. Open `application.yml` in `src/main/resources`
@@ -59,6 +65,8 @@ Follow the instructions for installing minikube here: https://kubernetes.io/docs
           show-details: always
     ```
 
+    This sets an application name for the info actuator, and enables more detail in the health actuator.
+
 1. Create a file called `application-default.yml` in `src/main/resources`
 1. Set its content to the following:
 
@@ -69,7 +77,7 @@ Follow the instructions for installing minikube here: https://kubernetes.io/docs
           - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
     ```
 
-    This will tell SpringBoot not to configure Redis when we're running locally - even though Redis is on the classpath. Failure to do this will not stop the application from starting and running successfully. But the health actuator will show the application being down. 
+    This will tell Springboot not to configure Redis when we're running locally - even though Redis is on the classpath. Failure to do this will not stop the application from starting and running successfully. But the health actuator will show the application being down. 
 
 ## Configure Swagger
 
@@ -147,7 +155,8 @@ Follow the instructions for installing minikube here: https://kubernetes.io/docs
         private BigDecimal calculateWithInterest(double amount, double rate, int years) {
             double monthlyRate = rate / 100.0 / 12.0;
             int numberOfPayments = years * 12;
-            double payment = (monthlyRate * amount) / (1.0 - Math.pow(1.0 + monthlyRate, -numberOfPayments));
+            double payment = (monthlyRate * amount) /
+                (1.0 - Math.pow(1.0 + monthlyRate, -numberOfPayments));
             return toMoney(payment);
         }
 
@@ -485,7 +494,7 @@ This repository includes a vue.js based single page application (SPA) that you c
 
 ## Containerize the Application
 
-We've got an executable JAR file, this is easy to put into a container. We'll show several ways to do this.
+We now have an executable JAR file, this is easy to put into a container. We'll show several ways to do this.
 
 ### Build Container Manually
 
@@ -612,7 +621,8 @@ We have seen that the memory based hit counter is an issue - when new instances 
 
         @Bean
         public LettuceConnectionFactory redisConnectionFactory() {
-            return new LettuceConnectionFactory(new RedisStandaloneConfiguration(redisServer, redisServerPort));
+            return new LettuceConnectionFactory(
+                new RedisStandaloneConfiguration(redisServer, redisServerPort));
         }
 
         @Bean
@@ -693,7 +703,7 @@ These issues, and more, are why we need a container orchestrator. There are many
 
 Kubernetes is the clear winner at this time and it is causing a major disruption in the industry.
 
-## Declarative Versus Imperative
+### Declarative Versus Imperative
 
 In Kubernetes there is often more than one way to do something. Usually these alternative methods are classifies as "declarative" or "imperative". "Declarative" means that we "declare" our desired state and ask Kubernetes to make it happen. Usually this meants that we create a YAML configuration file, and tell Kubernetes to change the state of the cluster based on the contents of the YAML file.
 
@@ -701,7 +711,30 @@ In Kubernetes there is often more than one way to do something. Usually these al
 
 I'll show examples of both methods below.
 
-## Pods
+### Kubernetes Objects
+
+Kubernetes is configured by creting "objects" of many different types. Kubernetes supplies a variety of objects in the out-of-the-box configuration, but Kubernetes can also be extended with user (or vendor) defined objects. I believe that this ability to extend the basic functions of Kubernetes is one of the leading contributors to its overwhelming success in the market.
+
+In this workshop, we will work with four objects that are fundamental to all Kubernetes applications:
+
+- Pods
+- ReplicaSets
+- Deployments
+- Services
+
+But this is just scratching the surface of Kubernetes.
+
+### Kubectl - the Kubernetes Command Line Interface
+
+All interaction with Kubernetes is performed using Kubectl - the Kubernetes CLI (command line interface). Kubectl must be configured to connect to the particular Kubernetes cluster you are interested in. This configuration is performed in a variety of ways:
+
+- Starting minikube automatically configures Kubectl to talk to the minikube
+- The PKS CLI can be used to configure Kubectl to talk to a PKS cluster
+- Many others
+
+Before proceding with the workshop, make sure that Kubectl is configured properly for your environment. You can test this by entering the command `kubectl cluster-info` - this should show some details about the cluster you are connected to.
+
+### Pods
 
 In Kubernetes, containers run in "pods". This abstraction is offered to allow multiple containers to be deployed in a single pod. But don't think of this as building a pod to contain an entire application. Rather, think of multiple containers as the ability to add helpers to a microservice (like log forwarding, metrics agents, etc.) 
 
@@ -755,7 +788,7 @@ wget 10.200.64.7:8080/crash
 
 (Use the command `kubectl get pod payment-service -o wide` to get the IP address)
 
-## Replica Sets
+### Replica Sets
 
 A replica set is a group of pods running the same containers. We declare to Kubernetes how many replicas we want running and Kubernetes will ensure that the number of pods is running. If a pod dies, Kubernetes will start a new one.
 
@@ -796,7 +829,7 @@ There's a lot going on here, but the important thing is Kubernetes will now ensu
 
 Replica sets are rarely used by themselves. More common is to use a Deployment.
 
-## Deployments
+### Deployments
 
 Deployments are like replica sets with one added benefit - they know how to do updates and rollbacks. For this reason, it is very common to use Deployments rather than replica sets.
 
@@ -851,7 +884,7 @@ Then run the following command:
 kubectl create -f deployment.yml
 ```
 
-## Services
+### Services
 
 Services are how we allow traffic into a Pod.
 
@@ -902,7 +935,7 @@ kubectl get service
 
 Access the app - in my case it was http://192.168.133.7:31407
 
-## Stand Up Redis in Kubernetes
+### Stand Up Redis in Kubernetes
 
 ```bash
 kubectl run redis --image=redis
@@ -911,7 +944,7 @@ kubectl expose deployment redis --type=ClusterIP --port=6379 --target-port=6379
 
 This creates a single Pod deployment of Redis, and a ClusterIP based service. It also adds the service name ("redis") to the cluster DNS.
 
-## Modify the Deployment
+### Modify the Deployment
 
 In the `deployment.yml` file, we need to do two things:
 
