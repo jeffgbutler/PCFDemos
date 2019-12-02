@@ -160,6 +160,9 @@ Once you have credentials, login with the CLI...
     import java.math.BigDecimal;
     import java.math.RoundingMode;
 
+    import org.springframework.stereotype.Service;
+
+    @Service
     public class PaymentService {
 
         public BigDecimal calculate(double amount, double rate, int years) {
@@ -209,6 +212,9 @@ Once you have credentials, login with the CLI...
     ```java
     package microservice.workshop.redisdemo.service;
 
+    import org.springframework.stereotype.Service;
+
+    @Service
     public class MemoryHitCounterService implements HitCounterService {
 
         private long hitCount = 0;
@@ -237,6 +243,9 @@ Once you have credentials, login with the CLI...
     import java.util.concurrent.ScheduledExecutorService;
     import java.util.concurrent.TimeUnit;
 
+    import org.springframework.stereotype.Service;
+
+    @Service
     public class CrashService {
         private ScheduledExecutorService executer = Executors.newScheduledThreadPool(1);
     
@@ -401,28 +410,6 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
     }
     ```
 
-## Setup Dependency Injection
-
-1. Open the class `RedisDemoApplication` in the package `microservice.workshop.redisdemo`
-1. Add the following methods:
-
-    ```java
-    @Bean
-    public PaymentService paymentService() {
-        return new PaymentService();
-    }
-    
-    @Bean
-    public HitCounterService hitCounterService() {
-        return new MemoryHitCounterService();
-    }
-
-	@Bean
-	public CrashService crashService() {
-		return new CrashService();
-	}
-    ```
-
 ## Unit Tests
 
 1. Make a new package `microservice.workshop.redisdemo.http` in the `src/test/java` tree
@@ -439,26 +426,26 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
     import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
     import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
-    import org.junit.Before;
-    import org.junit.Test;
-    import org.junit.runner.RunWith;
+    import org.junit.jupiter.api.BeforeEach;
+    import org.junit.jupiter.api.Test;
+    import org.junit.jupiter.api.extension.ExtendWith;
     import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.boot.test.context.SpringBootTest;
     import org.springframework.http.HttpStatus;
     import org.springframework.http.MediaType;
-    import org.springframework.test.context.junit4.SpringRunner;
+    import org.springframework.test.context.junit.jupiter.SpringExtension;
     import org.springframework.test.web.servlet.MockMvc;
     import org.springframework.web.context.WebApplicationContext;
 
-    @RunWith(SpringRunner.class)
+    @ExtendWith(SpringExtension.class)
     @SpringBootTest
     public class PaymentControllerTest {
         private MockMvc mockMvc;
-    
+
         @Autowired
         private WebApplicationContext webApplicationContext;
 
-        @Before
+        @BeforeEach
         public void setup() {
             this.mockMvc = webAppContextSetup(webApplicationContext).build();
         }
@@ -467,10 +454,10 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
         public void testWithInterest() throws Exception {
             mockMvc.perform(get("/resetCount"))
             .andExpect(status().is(HttpStatus.OK.value()));
-            
+        
             mockMvc.perform(get("/payment?amount=100000&rate=3.5&years=30"))
             .andExpect(status().is(HttpStatus.OK.value()))
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.payment", is(449.04)))
             .andExpect(jsonPath("$.count", is(1)));
         }
@@ -479,10 +466,10 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
         public void testZeroInterest() throws Exception {
             mockMvc.perform(get("/resetCount"))
             .andExpect(status().is(HttpStatus.OK.value()));
-            
+        
             mockMvc.perform(get("/payment?amount=100000&rate=0&years=30"))
             .andExpect(status().is(HttpStatus.OK.value()))
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.payment", is(277.78)))
             .andExpect(jsonPath("$.count", is(1)));
         }
@@ -491,16 +478,16 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
         public void testThatHitCounterIncrements() throws Exception {
             mockMvc.perform(get("/resetCount"))
             .andExpect(status().is(HttpStatus.OK.value()));
-            
+        
             mockMvc.perform(get("/payment?amount=100000&rate=3.5&years=30"))
             .andExpect(status().is(HttpStatus.OK.value()))
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.payment", is(449.04)))
             .andExpect(jsonPath("$.count", is(1)));
 
             mockMvc.perform(get("/payment?amount=100000&rate=0&years=30"))
             .andExpect(status().is(HttpStatus.OK.value()))
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.payment", is(277.78)))
             .andExpect(jsonPath("$.count", is(2)));
         }
@@ -535,10 +522,10 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
       path: target/redis-demo-0.0.1-SNAPSHOT.jar
       random-route: true
       env:
-        JBP_CONFIG_OPEN_JDK_JRE: '{jre: {version: 12.+}}'
+        JBP_CONFIG_OPEN_JDK_JRE: '{jre: {version: 11.+}}'
     ```
 
-    Note that this manifest specifies JRE 12+. This is not required if you are using Java 8 (the Java buildpack default). If you are using Java 11, you can change the environment variable accordingly. 
+    Note that this manifest specifies JRE 11+. This is not required if you are using Java 8 (the Java buildpack default). If you are using a different version of Java, you can change the environment variable accordingly. 
 
 1. Build the application JAR file:
     - (Windows Command Prompt) `mvnw clean package`
@@ -615,8 +602,12 @@ You should have noticed that the hit counter is not consistent among the instanc
     package microservice.workshop.redisdemo.service;
 
     import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.context.annotation.Profile;
     import org.springframework.data.redis.core.RedisTemplate;
+    import org.springframework.stereotype.Service;
 
+    @Service
+    @Profile("cloud")
     public class RedisHitCounterService implements HitCounterService {
 
         private static final String REDIS_KEY = "payment-calculator";
@@ -650,13 +641,9 @@ You should have noticed that the hit counter is not consistent among the instanc
     import org.springframework.data.redis.core.RedisTemplate;
     import org.springframework.data.redis.serializer.GenericToStringSerializer;
 
-    import microservice.workshop.redisdemo.service.HitCounterService;
-    import microservice.workshop.redisdemo.service.RedisHitCounterService;
-
     @Configuration
     @Profile("cloud")
     public class CloudConfiguration {
-
         @Bean
         public RedisTemplate<String, Integer> redisTemplate(RedisConnectionFactory redisFactory) {
             RedisTemplate<String, Integer> template = new RedisTemplate<>();
@@ -664,24 +651,19 @@ You should have noticed that the hit counter is not consistent among the instanc
             template.setValueSerializer(new GenericToStringSerializer<>(Integer.class));
             return template;
         }
-    
-        @Bean
-        public HitCounterService hitCounterService() {
-            return new RedisHitCounterService();
-        }
     }
     ```
 
     This configuration is enabled when the "cloud" profile is enabled only. On Cloud Foundry, the Java build pack enables this profile. When enabled, this configuration will create a Redis connection based on the Redis instance bound to the application.
 
-1. Open `RedisDemoApplication` in the `microservice.workshop.redisdemo` package
-1. Change the `hitCounterService` method so that it is only active when not on the cloud:
+1. Open `MemoryHitCounterService.java` in the `microservice.workshop.redisdemo.service` package
+1. Change the service so that it is only active when not on the cloud:
 
     ```java
-    @Bean
+    @Service
     @Profile("!cloud")
-    public HitCounterService hitCounterService() {
-        return new MemoryHitCounterService();
+    public class MemoryHitCounterService implements HitCounterService {
+        ...
     }
     ```
 
@@ -693,7 +675,7 @@ You should have noticed that the hit counter is not consistent among the instanc
       path: target/redis-demo-0.0.1-SNAPSHOT.jar
       random-route: true
       env:
-        JBP_CONFIG_OPEN_JDK_JRE: '{jre: {version: 12.+}}'
+        JBP_CONFIG_OPEN_JDK_JRE: '{jre: {version: 11.+}}'
       services:
       - xxxredis
     ```
