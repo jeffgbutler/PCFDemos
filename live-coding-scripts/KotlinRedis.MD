@@ -38,7 +38,7 @@ Once you have credentials, login with the CLI...
 ## Create the Basic Application
 
 1. Navigate to [https://start.spring.io](https://start.spring.io)
-1. Create a Gradle project with Kotlin and the latest version of Spring Boot (2.2.0 at the time of writing)
+1. Create a Gradle project with Kotlin and the latest version of Spring Boot (2.2.2 at the time of writing)
 1. Specify group: `microservice.workshop`
 1. Specify artifact: `kotlin-redis-demo`
 1. Specify packaging: Jar
@@ -107,7 +107,7 @@ Once you have credentials, login with the CLI...
     ```kotlin
     plugins {
         // existing
-        id("com.gorylenko.gradle-git-properties") version "2.1.0"
+        id("com.gorylenko.gradle-git-properties") version "2.2.0"
     }
 
     // new...
@@ -184,6 +184,7 @@ Once you have credentials, login with the CLI...
     import org.springframework.stereotype.Service
     import java.math.BigDecimal
     import java.math.RoundingMode
+    import kotlin.math.pow
 
     @Service
     class PaymentService {
@@ -197,7 +198,7 @@ Once you have credentials, login with the CLI...
         private fun calculateWithInterest(amount: Double, rate: Double, years: Int): BigDecimal {
             val monthlyRate = rate / 100.0 / 12.0
             val numberOfPayments = years * 12
-            val payment = monthlyRate * amount / (1.0 - Math.pow(1.0 + monthlyRate, (-numberOfPayments).toDouble()))
+            val payment = monthlyRate * amount / (1.0 - (1.0 + monthlyRate).pow((-numberOfPayments).toDouble()))
             return toMoney(payment)
         }
 
@@ -210,6 +211,34 @@ Once you have credentials, login with the CLI...
             BigDecimal(d).setScale(2, RoundingMode.HALF_UP)
     }
     ```
+
+## Create a Payment Service Test
+1. Create a package `microservice.workshop.kotlinredisdemo.service` in the `src/test/kotlin` tree
+1. Create a class in the new package called `PaymentServiceTests`
+1. Set the content of `PaymentServiceTests` to the following:
+
+    ```kotlin
+    import org.assertj.core.api.Assertions.assertThat
+    import org.junit.jupiter.api.Test
+
+    class PaymentServiceTests {
+        @Test
+        fun testNoInterest() {
+            val ps = PaymentService()
+            val payment = ps.calculate(120000.0, 0.0, 10)
+            assertThat(payment.toDouble()).isEqualTo(1000.00)
+        }
+
+        @Test
+        fun testWithInterest() {
+            val ps = PaymentService()
+            val payment = ps.calculate(120000.0, 3.5, 30)
+            assertThat(payment.toDouble()).isEqualTo(538.85)
+        }
+    }
+    ```
+
+1. Run the test in your IDE to make sure the payment service is working
 
 ## Create a Hit Counter Service
 
