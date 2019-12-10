@@ -276,7 +276,8 @@ Once you have credentials, login with the CLI...
     package microservice.workshop.kotlinredisdemo.service
 
     import org.springframework.stereotype.Service
-    import java.util.concurrent.*
+    import java.util.concurrent.Executors
+    import java.util.concurrent.TimeUnit
     import kotlin.system.exitProcess
 
     @Service
@@ -410,7 +411,7 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
     }
     ```
 
-## Unit Tests
+## Create a Payment Controller Test
 
 1. Make a new package `microservice.workshop.kotlinredisdemo.http` in the `src/test/kotlin` tree
 1. Create a class in the new package called `PaymentControllerTest`
@@ -420,7 +421,6 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
     package microservice.workshop.kotlinredisdemo.http
 
     import org.hamcrest.Matchers.`is`
-    import org.junit.jupiter.api.BeforeEach
     import org.junit.jupiter.api.Test
     import org.junit.jupiter.api.extension.ExtendWith
     import org.springframework.beans.factory.annotation.Autowired
@@ -428,7 +428,6 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
     import org.springframework.http.HttpStatus
     import org.springframework.http.MediaType
     import org.springframework.test.context.junit.jupiter.SpringExtension
-    import org.springframework.test.web.servlet.MockMvc
     import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
     import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
     import org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup
@@ -437,59 +436,57 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
     @ExtendWith(SpringExtension::class)
     @SpringBootTest
     class PaymentControllerTest {
-        private lateinit var mockMvc: MockMvc
-
         @Autowired
         private lateinit var webApplicationContext: WebApplicationContext
 
-        @BeforeEach
-        fun setup() {
-            this.mockMvc = webAppContextSetup(webApplicationContext).build()
-        }
+        private fun mockMvc() = webAppContextSetup(webApplicationContext).build()
 
         @Test
-        @Throws(Exception::class)
         fun testWithInterest() {
-            mockMvc.perform(get("/resetCount"))
+            with(mockMvc()) {
+                perform(get("/resetCount"))
                     .andExpect(status().`is`(HttpStatus.OK.value()))
 
-            mockMvc.perform(get("/payment?amount=100000&rate=3.5&years=30"))
+                perform(get("/payment?amount=100000&rate=3.5&years=30"))
                     .andExpect(status().`is`(HttpStatus.OK.value()))
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.payment", `is`(449.04)))
                     .andExpect(jsonPath("$.count", `is`(1)))
+            }
         }
 
         @Test
-        @Throws(Exception::class)
         fun testZeroInterest() {
-            mockMvc.perform(get("/resetCount"))
+            with(mockMvc()) {
+                perform(get("/resetCount"))
                     .andExpect(status().`is`(HttpStatus.OK.value()))
 
-            mockMvc.perform(get("/payment?amount=100000&rate=0&years=30"))
+                perform(get("/payment?amount=100000&rate=0&years=30"))
                     .andExpect(status().`is`(HttpStatus.OK.value()))
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.payment", `is`(277.78)))
                     .andExpect(jsonPath("$.count", `is`(1)))
+            }
         }
 
         @Test
-        @Throws(Exception::class)
         fun testThatHitCounterIncrements() {
-            mockMvc.perform(get("/resetCount"))
+            with(mockMvc()) {
+                perform(get("/resetCount"))
                     .andExpect(status().`is`(HttpStatus.OK.value()))
 
-            mockMvc.perform(get("/payment?amount=100000&rate=3.5&years=30"))
+                perform(get("/payment?amount=100000&rate=3.5&years=30"))
                     .andExpect(status().`is`(HttpStatus.OK.value()))
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.payment", `is`(449.04)))
                     .andExpect(jsonPath("$.count", `is`(1)))
 
-            mockMvc.perform(get("/payment?amount=100000&rate=0&years=30"))
+                perform(get("/payment?amount=100000&rate=0&years=30"))
                     .andExpect(status().`is`(HttpStatus.OK.value()))
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.payment", `is`(277.78)))
                     .andExpect(jsonPath("$.count", `is`(2)))
+            }
         }
     }
     ```
@@ -522,10 +519,10 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
       path: build/libs/kotlin-redis-demo-0.0.1-SNAPSHOT.jar
       random-route: true
       env:
-        JBP_CONFIG_OPEN_JDK_JRE: '{jre: {version: 12.+}}'
+        JBP_CONFIG_OPEN_JDK_JRE: '{jre: {version: 11.+}}'
     ```
 
-    Note that this manifest specifies JRE 12+. This is not required if you are using Java 8 (the Java buildpack default). If you are using Java 11, you can change the environment variable accordingly. 
+    Note that this manifest specifies JRE 11+. This is not required if you are using Java 8 (the Java buildpack default). If you are using a different version of Java then you can change the environment variable accordingly. 
 
 1. Build the application JAR file:
     - (Windows Command Prompt) `gradlew clean bootJar`
@@ -625,6 +622,8 @@ You should have noticed that the hit counter is not consistent among the instanc
     }
     ```
 
+    Note that IntelliJ may show a warning here about being unable to autowire the redisTemplate. You can ignore this error, we will fix it next.
+
 1. Create a class `CloudConfiguration` in the `microservice.workshop.kotlinredisdemo` package. Add the following:
 
     ```kotlin
@@ -633,9 +632,9 @@ You should have noticed that the hit counter is not consistent among the instanc
     import org.springframework.context.annotation.Bean
     import org.springframework.context.annotation.Configuration
     import org.springframework.context.annotation.Profile
-    import org.springframework.data.redis.serializer.GenericToStringSerializer
-    import org.springframework.data.redis.core.RedisTemplate
     import org.springframework.data.redis.connection.RedisConnectionFactory
+    import org.springframework.data.redis.core.RedisTemplate
+    import org.springframework.data.redis.serializer.GenericToStringSerializer
 
     @Configuration
     @Profile("cloud")
@@ -643,11 +642,10 @@ You should have noticed that the hit counter is not consistent among the instanc
 
         @Bean
         fun redisTemplate() =
-                with(RedisTemplate<String, Int>()) {
-                    setConnectionFactory(redisFactory)
-                    valueSerializer = GenericToStringSerializer(Int::class.java)
-                    this
-                }
+            RedisTemplate<String, Int>().apply {
+                setConnectionFactory(redisFactory)
+                valueSerializer = GenericToStringSerializer(Int::class.java)
+            }
     }
     ```
 
@@ -672,9 +670,9 @@ You should have noticed that the hit counter is not consistent among the instanc
       path: build/libs/kotlin-redis-demo-0.0.1-SNAPSHOT.jar
       random-route: true
       env:
-        JBP_CONFIG_OPEN_JDK_JRE: '{jre: {version: 12.+}}'
+        JBP_CONFIG_OPEN_JDK_JRE: '{jre: {version: 11.+}}'
       services:
-      - xxxredis
+        - xxxredis
     ```
 
     Where "xxxredis" maps to the name of the redis instance you created above. Note that you should also change the name of the application to denote the new version.
