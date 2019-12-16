@@ -224,15 +224,13 @@ Once you have credentials, login with the CLI...
     class PaymentServiceTests {
         @Test
         fun testNoInterest() {
-            val ps = PaymentService()
-            val payment = ps.calculate(120000.0, 0.0, 10)
+            val payment = PaymentService().calculate(120000.0, 0.0, 10)
             assertThat(payment.toDouble()).isEqualTo(1000.00)
         }
 
         @Test
         fun testWithInterest() {
-            val ps = PaymentService()
-            val payment = ps.calculate(120000.0, 3.5, 30)
+            val payment = PaymentService().calculate(120000.0, 3.5, 30)
             assertThat(payment.toDouble()).isEqualTo(538.85)
         }
     }
@@ -372,11 +370,8 @@ This is needed for the unit tests - it will reset the hit counter to a known sta
     @RestController
     @RequestMapping("/resetCount")
     class ResetHitCounterController(private val hitCounterService: HitCounterService) {
-
         @GetMapping
-        fun reset() {
-            hitCounterService.resetCount()
-        }
+        fun reset() = hitCounterService.resetCount()
     }
     ```
 
