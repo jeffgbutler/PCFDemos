@@ -703,6 +703,10 @@ You should now be able to test the app with Swagger at the route created by PCF.
 
 Change the URL in the client page to the new route you've created (https://jgb-payment-calculator.cfapps.io). You should see traffic being routed to your app.
 
+To simulate blue-green deploy of newer code, we will deploy the same app but give it a different name by incrementing the version from 1.0 to 1.1. The below cf push command will use the same manifest file but override the name of the app (in manifest file) by using the name that you provide on the command line below. The below command will deploy your app on Cloud Foundry with the name RedisDemo-1.1.
+
+- `cf push RedisDemo-1.1`
+
 Now route traffic to the 1.1 version of the app:
 
 - `cf map-route RedisDemo-1.1 cfapps.io --hostname xxx-payment-calculator`
