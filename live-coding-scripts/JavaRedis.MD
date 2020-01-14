@@ -571,8 +571,9 @@ Some interesting CLI commands...
 
 Applications can be scaled in two ways - through the app manager UI, or through the CLI. We will use the CLI.
 
-1. Start the loan-calculator-client web page from this repository
-1. Enter the URL to your application (like https://redisdemo-10-shy-zebra.cfapps.io)
+
+1. Start the loan-calculator-client web page by using this URL: https://jeffgbutler.github.io/payment-calculator-client/
+1. Enter the URL to your application (like https://redisdemo-10-shy-zebra.cfapps.io) in the Base URL textbox
 1. Press the "Start" button. You should see random traffic being generated to the application. You should also see the all traffic is routed to instance 0
 1. Scale the app by entering the command `cf scale RedisDemo-1.0 -i 2` - this will request two instances of the app running. Eventually you should see traffic being routed to the two app instances. Notice that the hit count is not consistent. Why?
 1. If you press the "Crash It!" button on the client page, then one of the app instances will crash. Which one depends on how the request was routed. Cloud Foundry will notice that an instance has crashed and will start a new instance automatically - this may take a few minutes to show
