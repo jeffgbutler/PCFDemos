@@ -1,4 +1,4 @@
-# PCF Basics with .Net Core and Redis
+# PCF Basics with .Net Core 2.x and Redis
 This exercise will cover the following:
 
 - Building a simple web service with .Net core
