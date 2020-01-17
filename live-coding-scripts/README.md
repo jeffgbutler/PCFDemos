@@ -21,10 +21,12 @@ Script | Description
 
 ### C#/.Net Core / Steeltoe
 
+**Important note:** - .Net Core 2.2 has reached end of life and the corresponding Cloud Foundry buildpack no longer supports version 2.2. Version 2.1 is supported for legacy workloads, but newer versions of Steeltoe do not support .Net Core version 2.1. The bottom line is...use .Net Core 3.1
+
 Script | Description
 --|--
-[C# and Redis](DotNetCoreRedis.md) | **.Net Core 2.X** Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
-[C# and Redis](DotNetCoreRedis-V3.md) | **.Net Core 3.X** Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
+[C# and Redis](DotNetCoreRedis.md) | **.Net Core 2.2.X** Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
+[C# and Redis](DotNetCoreRedis-V3.md) | **.Net Core 3.1.X** Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
 
 ## Kubernetes
 
