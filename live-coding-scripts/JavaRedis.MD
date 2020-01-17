@@ -681,7 +681,9 @@ You should have noticed that the hit counter is not consistent among the instanc
       - xxxredis
     ```
 
-    Where "xxxredis" maps to the name of the redis instance you created above. Note that you should also change the name of the application to denote the new version.
+    Where "xxxredis" maps to the name of the redis instance you created above.
+    
+    **Important Note:** you should also change the name of the application to denote the new version.
 
 1. Delete the file `application-cloud.yml` in `src/main/resources`
 
