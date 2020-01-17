@@ -20,7 +20,7 @@ This exercise will cover the following:
 
 ### Install an IDE
 
-1. Install either Visual Studio IDE or Visual Studio Code fomr this URL: https://visualstudio.microsoft.com/
+1. Install either Visual Studio IDE or Visual Studio Code from this URL: https://visualstudio.microsoft.com/
 1. If you choose Visual Studio Code, also install the C# extension
 
 ### Obtain PCF Credentials
