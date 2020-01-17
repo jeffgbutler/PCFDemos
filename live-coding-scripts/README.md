@@ -23,7 +23,8 @@ Script | Description
 
 Script | Description
 --|--
-[C# and Redis](DotNetCoreRedis.md) | Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
+[C# and Redis](DotNetCoreRedis.md) | **.Net Core 2.X** Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
+[C# and Redis](DotNetCoreRedis-V3.md) | **.Net Core 3.X** Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
 
 ## Kubernetes
 
