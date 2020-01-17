@@ -431,6 +431,8 @@ You should have noticed that the hit counter is not consistent among the instanc
 
 1. `cf push`
 
+1. Exercise the application as before. You should now see the hit counter remaining consistent across instances and after crashes.
+
 ## Blue-Green Deployment
 
 1. Create a new route with the cf cli:
