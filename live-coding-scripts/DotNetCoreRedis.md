@@ -257,7 +257,7 @@ Swagger is a REST documentation and UI tool, that also includes code generation 
     ```csharp
     services.AddSwaggerGen(c =>
     {
-        c.SwaggerDoc("v1", new Info { Title = "My API", Version = "v1" });                
+        c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });                
     });
     ```
 
