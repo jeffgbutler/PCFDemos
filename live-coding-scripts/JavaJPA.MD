@@ -3,7 +3,7 @@
 ## Create the Basic Application
 
 1. Navigate to [https://start.spring.io](https://start.spring.io)
-1. Create a Maven project with Java and the latest version of Spring Boot (2.1.1 at the time of writing)
+1. Create a Maven project with Java and the latest version of Spring Boot (2.2.4 at the time of writing)
 1. Specify group: `microservice.workshop`
 1. Specify artifact: `jpa-demo`
 1. Specify packaging: Jar
@@ -264,18 +264,18 @@
     import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
     import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
-    import org.junit.Before;
-    import org.junit.Test;
-    import org.junit.runner.RunWith;
+    import org.junit.jupiter.api.BeforeEach;
+    import org.junit.jupiter.api.Test;
+    import org.junit.jupiter.api.extension.ExtendWith;
     import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.boot.test.context.SpringBootTest;
     import org.springframework.http.HttpStatus;
     import org.springframework.http.MediaType;
-    import org.springframework.test.context.junit4.SpringRunner;
+    import org.springframework.test.context.junit.jupiter.SpringExtension;
     import org.springframework.test.web.servlet.MockMvc;
     import org.springframework.web.context.WebApplicationContext;
 
-    @RunWith(SpringRunner.class)
+    @ExtendWith(SpringExtension.class)
     @SpringBootTest
     public class PersonControllerTest {
         private MockMvc mockMvc;
@@ -283,7 +283,7 @@
         @Autowired
         private WebApplicationContext webApplicationContext;
     
-        @Before
+        @BeforeEach
         public void setup() {
             this.mockMvc = webAppContextSetup(webApplicationContext).build();
         }
@@ -292,7 +292,7 @@
         public void testFindAll() throws Exception {
             mockMvc.perform(get("/person"))
             .andExpect(status().is(HttpStatus.OK.value()))
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$", hasSize(4)));
         }
 
@@ -300,7 +300,7 @@
         public void testFindOne() throws Exception {
             mockMvc.perform(get("/person/1"))
             .andExpect(status().is(HttpStatus.OK.value()))
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.firstName", is("Fred")))
             .andExpect(jsonPath("$.lastName", is("Flintstone")));
         }
@@ -315,7 +315,7 @@
         public void testSearch() throws Exception {
             mockMvc.perform(get("/person/search?lastName=Rubble"))
             .andExpect(status().is(HttpStatus.OK.value()))
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$", hasSize(2)));
         }    
     }
