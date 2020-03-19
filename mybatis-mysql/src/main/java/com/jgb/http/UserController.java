@@ -40,7 +40,6 @@ public class UserController {
         }
     }
     
-
     @PostMapping
     public ResponseEntity<?> insert(@RequestBody User user, UriComponentsBuilder ucBuilder) {
         userService.insertUser(user);
