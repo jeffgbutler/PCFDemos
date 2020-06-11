@@ -32,7 +32,7 @@ Once you have credentials, login with the CLI...
 ## Create the Basic Application
 
 1. Navigate to [https://start.spring.io](https://start.spring.io)
-1. Create a Maven project with Java and the latest version of Spring Boot (2.1.5 at the time of writing)
+1. Create a Maven project with Java and the latest version of Spring Boot (2.3.0 at the time of writing)
 1. Specify group: `microservice.workshop`
 1. Specify artifact: `redis-demo`
 1. Specify packaging: Jar
