@@ -128,3 +128,51 @@ Wavefront can be very useful debug tool for developers. It will captures errors 
 1. Wait for some errors to show in the Wavefront dashboard, then use the Wavefront tracing feature to show the logs
 1. Stop the client web app and the Spring Boot application
 
+## Custom Metrics
+
+Wavefront can track custom metrics. We can add any number of custom metrics to an application and emit them to Wavefront.
+
+1. Open `PaymentController.java` in the `microservice.workshop.redisdemo.http` package
+1. Add the following constructor and instance variable:
+
+  ```java
+  private Counter counter;
+
+  public PaymentController(MeterRegistry registry) {
+      counter = registry.counter("paymentservice.calculatepayment.count");
+  }
+  ```
+
+  `Counter` and `MeterRegistry` are in the `io.micrometer.core.instrument` package
+
+1. Add the following line in the `calculatePayment` method:
+
+  ```java
+  counter.increment();
+  ```
+
+1. Open `ResetHitCounterController.java` in the `microservice.workshop.redisdemo.http` package
+
+1. Add the following constructor and instance variable:
+
+  ```java
+  private Counter counter;
+
+  public ResetHitCounterController(MeterRegistry registry) {
+    counter = registry.counter("paymentservice.reset.count");
+  }
+  ```
+
+  `Counter` and `MeterRegistry` are in the `io.micrometer.core.instrument` package
+
+1. Add the following line in the `reset` method:
+
+  ```java
+  counter.increment();
+  ```
+
+1. Start the Spring Boot application
+1. Start the client application
+1. Navigate to Wavefront through `http://localhost:8080/actuator/wavefront`
+1. Show the custom metrics in tWavefront
+1. Stop the client web app and the Spring Boot application
