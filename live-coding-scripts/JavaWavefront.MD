@@ -61,7 +61,7 @@ This is all you need to do to add basic Wavefront support to a Spring Boot appli
     ```
 
 1. Start the loan-calculator-client web page by using this URL: https://jeffgbutler.github.io/payment-calculator-client/
-1. Enter the URL to your application (like https://localhost:8080) in the Base URL textbox
+1. Enter the URL to your application (like http://localhost:8080) in the Base URL textbox
 1. Press the "Start" button. You should see random traffic being generated for the application.
 1. Follow the link to Wavefront from the log output - you should see a wavefront dashboard for the application. It may take a few minutes for data to appear in the Wavefront dashboard.
 1. Stop the client web app and the Spring Boot application
