@@ -12,6 +12,7 @@ Script | Description
 --|--
 [Java and JPA](JavaJPA.MD)| Simple JPA app. Uses H2 in-memory database locally, binds to an RDB in Cloud Foundry 
 [Java and Redis](JavaRedis.MD) | Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
+[Wavefront](JavaWavefront.MD) | Wavefront Observability with Spring Boot
 
 ### Kotlin/Spring Boot
 
