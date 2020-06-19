@@ -1,6 +1,6 @@
 # Live Coding Scripts
 
-This folder contains live coding scripts that can be used to demonstrate various aspects of Pivotal Cloud Foundry and Kubernetes. These scripts can also be used as instructions for developer workshops.
+This folder contains live coding scripts that can be used to demonstrate various aspects of Tanzu Application Service and Kubernetes. These scripts can also be used as instructions for developer workshops.
 
 If you have any difficulties with Java on Windows, see this page for some tips: [Java on Windows Tips](JavaInstallOnWindows.md)
 
@@ -20,14 +20,15 @@ Script | Description
 --|--
 [Kotlin and Redis](KotlinRedis.MD) | Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
 
-### C#/.Net Core / Steeltoe
+### C#/.NET / Steeltoe
 
-**Important note:** - .Net Core 2.2 has reached end of life and the corresponding Cloud Foundry buildpack no longer supports version 2.2. Version 2.1 is supported for legacy workloads, but newer versions of Steeltoe do not support .Net Core version 2.1. The bottom line is...use .Net Core 3.1
+**Important note:** - .NET Core 2.2 has reached end of life and the corresponding Cloud Foundry buildpack no longer supports version 2.2. Version 2.1 is supported for legacy workloads, but newer versions of Steeltoe do not support .NET Core version 2.1. The bottom line is...use .Net Core 3.1
 
 Script | Description
 --|--
-[C# and Redis](DotNetCoreRedis.md) | **.Net Core 2.2.X** Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
-[C# and Redis](DotNetCoreRedis-V3.md) | **.Net Core 3.1.X** Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
+[.NET Framework, C# and Redis](DotNetFrameworkRedis.md) | **.NET Framework** Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
+[.NET Core C# and Redis](DotNetCoreRedis.md) | **.NET Core 2.2.X** Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
+[.NET Core C# and Redis](DotNetCoreRedis-V3.md) | **.NET Core 3.1.X** Simple Redis app. Uses in-memory counter when run locally, binds to Redis in Cloud Foundry
 
 ## Kubernetes
 
