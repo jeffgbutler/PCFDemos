@@ -32,21 +32,21 @@ Once you have credentials, login with the CLI...
 ## Create the Basic Application
 
 1. Navigate to [https://start.spring.io](https://start.spring.io)
-1. Create a Maven project with Java and the latest version of Spring Boot (2.3.0 at the time of writing)
+1. Create a Maven project with Java and the latest version of Spring Boot (2.3.3 at the time of writing)
 1. Specify group: `microservice.workshop`
 1. Specify artifact: `redis-demo`
 1. Specify packaging: Jar
 1. Specify Java Version to match what you have installed
 1. For dependencies, add the following:
-    - Spring Web Starter
-    - Spring Boot Actuator
-    - Spring Data Redis
+   - Spring Web Starter
+   - Spring Boot Actuator
+   - Spring Data Redis
 1. Generate the project (causes a download)
 1. Unzip the downloaded file somewhere convenient
 1. Add the new project to your IDE workspace
-    - Eclipse: File->Import->Existing Maven Project
-    - IntelliJ: File->New->Module From Existing Sources...
-    - VS Code: File->Add Folder to Workspace (or just open the folder by navigating to it and entering the command `code .`)
+   - Eclipse: File->Import->Existing Maven Project
+   - IntelliJ: File->New->Module From Existing Sources...
+   - VS Code: File->Add Folder to Workspace (or just open the folder by navigating to it and entering the command `code .`)
 
 ## Configure The Info Actuator
 
@@ -54,99 +54,94 @@ Once you have credentials, login with the CLI...
 1. Open `application.yml` in `src/main/resources`
 1. Add this value
 
-    ```yml
-    info:
-      app:
-        name: Payment Service
+   ```yml
+   info:
+     app:
+       name: Payment Service
 
-    management:
-      endpoint:
-        health:
-          show-details: always
-    ```
+   management:
+     endpoint:
+       health:
+         show-details: always
+   ```
 
 1. Create a file called `application-default.yml` in `src/main/resources`
 1. Set its content to the following:
 
-    ```yml
-    spring:
-      autoconfigure:
-        exclude:
-          - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-    ```
+   ```yml
+   spring:
+     autoconfigure:
+       exclude:
+         - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+   ```
 
-    This will tell SpringBoot not to configure Redis when we're running locally - even though Redis is on the classpath. Failure to do this will not stop the application from starting and running successfully. But the health actuator will show the application being down. 
+   This will tell SpringBoot not to configure Redis when we're running locally - even though Redis is on the classpath. Failure to do this will not stop the application from starting and running successfully. But the health actuator will show the application being down.
 
 1. Create a file called `application-cloud.yml` in `src/main/resources`
 1. Set its content to the following:
 
-    ```yml
-    spring:
-      autoconfigure:
-        exclude:
-          - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-    ```
+   ```yml
+   spring:
+     autoconfigure:
+       exclude:
+         - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+   ```
 
-    This will tell SpringBoot not to configure Redis when we're running in the cloud - even though Redis is on the classpath. We will remove this file once we're ready to work with Redis. 
+   This will tell SpringBoot not to configure Redis when we're running in the cloud - even though Redis is on the classpath. We will remove this file once we're ready to work with Redis.
 
 ## Configure Swagger
 
 1. Open `pom.xml`, add the following dependencies:
 
-    ```xml
-    <dependency>
-      <groupId>io.springfox</groupId>
-      <artifactId>springfox-swagger2</artifactId>
-      <version>2.9.2</version>
-    </dependency>
-    <dependency>
-      <groupId>io.springfox</groupId>
-      <artifactId>springfox-swagger-ui</artifactId>
-      <version>2.9.2</version>
-    </dependency>
-    ```
+   ```xml
+   <dependency>
+     <groupId>io.springfox</groupId>
+     <artifactId>springfox-boot-starter</artifactId>
+     <version>3.0.0</version>
+   </dependency>
+   ```
 
 1. Create a class `SwaggerConfiguration` in the `micoservice.workshop.redisdemo` package. Add the following:
 
-    ```java
-    package microservice.workshop.redisdemo;
+   ```java
+   package microservice.workshop.redisdemo;
 
-    import org.springframework.context.annotation.Bean;
-    import org.springframework.context.annotation.Configuration;
-    import org.springframework.stereotype.Controller;
-    import org.springframework.web.bind.annotation.RequestMapping;
-    import org.springframework.web.bind.annotation.RestController;
-    import org.springframework.web.servlet.view.RedirectView;
-    import springfox.documentation.builders.RequestHandlerSelectors;
-    import springfox.documentation.spi.DocumentationType;
-    import springfox.documentation.spring.web.plugins.Docket;
-    import springfox.documentation.swagger2.annotations.EnableSwagger2;
+   import org.springframework.context.annotation.Bean;
+   import org.springframework.context.annotation.Configuration;
+   import org.springframework.stereotype.Controller;
+   import org.springframework.web.bind.annotation.RequestMapping;
+   import org.springframework.web.bind.annotation.RestController;
+   import org.springframework.web.servlet.view.RedirectView;
+   import springfox.documentation.builders.RequestHandlerSelectors;
+   import springfox.documentation.spi.DocumentationType;
+   import springfox.documentation.spring.web.plugins.Docket;
+   import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
-    @Configuration
-    @EnableSwagger2
-    @Controller
-    public class SwaggerConfiguration {
+   @Configuration
+   @EnableSwagger2
+   @Controller
+   public class SwaggerConfiguration {
 
-        @RequestMapping("/")
-        public RedirectView redirectToSwagger() {
-            return new RedirectView("swagger-ui.html");
-        }
+       @RequestMapping("/")
+       public RedirectView redirectToSwagger() {
+           return new RedirectView("swagger-ui/");
+       }
 
-        @Bean
-        public Docket api() {
-            return new Docket(DocumentationType.SWAGGER_2)
-                    .select()
-                    .apis(RequestHandlerSelectors.withClassAnnotation(RestController.class))
-                    .build();
-        }
-    }
-    ```
+       @Bean
+       public Docket api() {
+           return new Docket(DocumentationType.SWAGGER_2)
+                   .select()
+                   .apis(RequestHandlerSelectors.withClassAnnotation(RestController.class))
+                   .build();
+       }
+   }
+   ```
 
-    This configuration does three important things:
+   This configuration does three important things:
 
-    1. It enables Swagger
-    1. It redirects the root URL to the Swagger UI. I find this convenient, but YMMV
-    1. It tells Springfox that we only want to use Swagger for REST controllers. Without this there will be Swagger documentation for the redirect controller, as well as the basic Spring error controller and we usually don't want this.
+   1. It enables Swagger
+   1. It redirects the root URL to the Swagger UI. I find this convenient, but YMMV
+   1. It tells Springfox that we only want to use Swagger for REST controllers. Without this there will be Swagger documentation for the redirect controller, as well as the basic Spring error controller and we usually don't want this.
 
 ## Create a Payment Service
 
@@ -154,107 +149,107 @@ Once you have credentials, login with the CLI...
 1. Create a class in the new package called `PaymentService`
 1. Set the content of `PaymentService` to the following:
 
-    ```java
-    package microservice.workshop.redisdemo.service;
+   ```java
+   package microservice.workshop.redisdemo.service;
 
-    import java.math.BigDecimal;
-    import java.math.RoundingMode;
+   import java.math.BigDecimal;
+   import java.math.RoundingMode;
 
-    import org.springframework.stereotype.Service;
+   import org.springframework.stereotype.Service;
 
-    @Service
-    public class PaymentService {
+   @Service
+   public class PaymentService {
 
-        public BigDecimal calculate(double amount, double rate, int years) {
-            if (rate == 0.0) {
-                return calculateWithoutInterest(amount, years);
-            } else {
-                return calculateWithInterest(amount, rate, years);
-            }
-        }
+       public BigDecimal calculate(double amount, double rate, int years) {
+           if (rate == 0.0) {
+               return calculateWithoutInterest(amount, years);
+           } else {
+               return calculateWithInterest(amount, rate, years);
+           }
+       }
 
-        private BigDecimal calculateWithInterest(double amount, double rate, int years) {
-            double monthlyRate = rate / 100.0 / 12.0;
-            int numberOfPayments = years * 12;
-            double payment = (monthlyRate * amount) / (1.0 - Math.pow(1.0 + monthlyRate, -numberOfPayments));
-            return toMoney(payment);
-        }
+       private BigDecimal calculateWithInterest(double amount, double rate, int years) {
+           double monthlyRate = rate / 100.0 / 12.0;
+           int numberOfPayments = years * 12;
+           double payment = (monthlyRate * amount) / (1.0 - Math.pow(1.0 + monthlyRate, -numberOfPayments));
+           return toMoney(payment);
+       }
 
-        private BigDecimal calculateWithoutInterest(double amount, int years) {
-            int numberOfPayments = years * 12;
-            return toMoney(amount / numberOfPayments);
-        }
+       private BigDecimal calculateWithoutInterest(double amount, int years) {
+           int numberOfPayments = years * 12;
+           return toMoney(amount / numberOfPayments);
+       }
 
-        private BigDecimal toMoney(double d) {
-            BigDecimal bd = new BigDecimal(d);
-            return bd.setScale(2, RoundingMode.HALF_UP);
-        }
-    }
-    ```
+       private BigDecimal toMoney(double d) {
+           BigDecimal bd = new BigDecimal(d);
+           return bd.setScale(2, RoundingMode.HALF_UP);
+       }
+   }
+   ```
 
 ## Create a Hit Counter Service
 
 1. Create an interface in the `microservice.workshop.redisdemo.service` package called `HitCounterService`
 1. Set the content of `HitCounterService` to the following:
 
-    ```java
-    package microservice.workshop.redisdemo.service;
+   ```java
+   package microservice.workshop.redisdemo.service;
 
-    public interface HitCounterService {
-        long incrementCounter();
-        void resetCount();
-    }
-    ```
+   public interface HitCounterService {
+       long incrementCounter();
+       void resetCount();
+   }
+   ```
 
 1. Create a class in the `microservice.workshop.redisdemo.service` package called `MemoryHitCounterService`
 1. Set the content of `MemoryHitCounterService` to the following:
 
-    ```java
-    package microservice.workshop.redisdemo.service;
+   ```java
+   package microservice.workshop.redisdemo.service;
 
-    import org.springframework.stereotype.Service;
+   import org.springframework.stereotype.Service;
 
-    @Service
-    public class MemoryHitCounterService implements HitCounterService {
+   @Service
+   public class MemoryHitCounterService implements HitCounterService {
 
-        private long hitCount = 0;
-    
-        @Override
-        public long incrementCounter() {
-            return ++hitCount;
-        }
+       private long hitCount = 0;
 
-        @Override
-        public void resetCount() {
-            hitCount = 0;
-        }
-    }
-    ```
+       @Override
+       public long incrementCounter() {
+           return ++hitCount;
+       }
+
+       @Override
+       public void resetCount() {
+           hitCount = 0;
+       }
+   }
+   ```
 
 ## Create a Crash Service
 
 1. Create a class in the `microservice.workshop.redisdemo.service` package called `CrashService`
 1. Set the content of `CrashService` to the following:
 
-    ```java
-    package microservice.workshop.redisdemo.service;
+   ```java
+   package microservice.workshop.redisdemo.service;
 
-    import java.util.concurrent.Executors;
-    import java.util.concurrent.ScheduledExecutorService;
-    import java.util.concurrent.TimeUnit;
+   import java.util.concurrent.Executors;
+   import java.util.concurrent.ScheduledExecutorService;
+   import java.util.concurrent.TimeUnit;
 
-    import org.springframework.stereotype.Service;
+   import org.springframework.stereotype.Service;
 
-    @Service
-    public class CrashService {
-        private ScheduledExecutorService executer = Executors.newScheduledThreadPool(1);
-    
-        // calls System.exit after a 2 second delay
-        public void crashIt() {
-            executer.schedule(() -> System.exit(22), 2000, TimeUnit.MILLISECONDS);
-        }
-    }
-    ```
+   @Service
+   public class CrashService {
+       private ScheduledExecutorService executer = Executors.newScheduledThreadPool(1);
+
+       // calls System.exit after a 2 second delay
+       public void crashIt() {
+           executer.schedule(() -> System.exit(22), 2000, TimeUnit.MILLISECONDS);
+       }
+   }
+   ```
 
 ## Create a Return Model
 
@@ -262,22 +257,22 @@ Once you have credentials, login with the CLI...
 1. Create a class in the new package called `CalculatedPayment`
 1. Set the content of `CalculatedPayment` to the following:
 
-    ```java
-    package microservice.workshop.redisdemo.model;
+   ```java
+   package microservice.workshop.redisdemo.model;
 
-    import java.math.BigDecimal;
+   import java.math.BigDecimal;
 
-    public class CalculatedPayment {
-        private double amount;
-        private double rate;
-        private int years;
-        private BigDecimal payment;
-        private String instance;
-        private Long count;
-    
-        // TODO: add getters and setters for all fields...
-    }
-    ```
+   public class CalculatedPayment {
+       private double amount;
+       private double rate;
+       private int years;
+       private BigDecimal payment;
+       private String instance;
+       private Long count;
+
+       // TODO: add getters and setters for all fields...
+   }
+   ```
 
 ## Create a REST Controller for the Payment Service
 
@@ -285,62 +280,63 @@ Once you have credentials, login with the CLI...
 1. Create a class in the new package called `PaymentController`
 1. Set the content of `PaymentController` to the following:
 
-    ```java
-    package microservice.workshop.redisdemo.http;
+   ```java
+   package microservice.workshop.redisdemo.http;
 
-    import java.math.BigDecimal;
+   import java.math.BigDecimal;
 
-    import org.slf4j.Logger;
-    import org.slf4j.LoggerFactory;
-    import org.springframework.beans.factory.annotation.Autowired;
-    import org.springframework.beans.factory.annotation.Value;
-    import org.springframework.web.bind.annotation.CrossOrigin;
-    import org.springframework.web.bind.annotation.GetMapping;
-    import org.springframework.web.bind.annotation.RequestMapping;
-    import org.springframework.web.bind.annotation.RequestParam;
-    import org.springframework.web.bind.annotation.RestController;
+   import org.slf4j.Logger;
+   import org.slf4j.LoggerFactory;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.beans.factory.annotation.Value;
+   import org.springframework.web.bind.annotation.CrossOrigin;
+   import org.springframework.web.bind.annotation.GetMapping;
+   import org.springframework.web.bind.annotation.RequestMapping;
+   import org.springframework.web.bind.annotation.RequestParam;
+   import org.springframework.web.bind.annotation.RestController;
 
-    import microservice.workshop.redisdemo.model.CalculatedPayment;
-    import microservice.workshop.redisdemo.service.HitCounterService;
-    import microservice.workshop.redisdemo.service.PaymentService;
+   import microservice.workshop.redisdemo.model.CalculatedPayment;
+   import microservice.workshop.redisdemo.service.HitCounterService;
+   import microservice.workshop.redisdemo.service.PaymentService;
 
-    @CrossOrigin(origins = "*")
-    @RestController
-    @RequestMapping("/payment")
-    public class PaymentController {
+   @CrossOrigin(origins = "*")
+   @RestController
+   @RequestMapping("/payment")
+   public class PaymentController {
 
-        @Value("${cloud.application.instance_index:local}")
-        private String instance;
+       @Value("${cloud.application.instance_index:local}")
+       private String instance;
 
-        @Autowired
-        private HitCounterService hitCounterService;
+       @Autowired
+       private HitCounterService hitCounterService;
 
-        @Autowired
-        private PaymentService paymentService;
+       @Autowired
+       private PaymentService paymentService;
 
-        private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
+       private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
 
-        @GetMapping()
-        public CalculatedPayment calculatePayment(@RequestParam("amount") double amount, @RequestParam("rate") double rate,
-                @RequestParam("years") int years) {
+       @GetMapping()
+       public CalculatedPayment calculatePayment(@RequestParam("amount") double amount, @RequestParam("rate") double rate,
+               @RequestParam("years") int years) {
 
-            BigDecimal payment = paymentService.calculate(amount, rate, years);
+           BigDecimal payment = paymentService.calculate(amount, rate, years);
 
-            logger.debug("Calculated payment of {} for input amount: {}, rate: {}, years: {}",
-                payment, amount, rate, years);
+           logger.debug("Calculated payment of {} for input amount: {}, rate: {}, years: {}",
+               payment, amount, rate, years);
 
-            CalculatedPayment calculatedPayment = new CalculatedPayment();
-            calculatedPayment.setAmount(amount);
-            calculatedPayment.setRate(rate);
-            calculatedPayment.setYears(years);
-            calculatedPayment.setPayment(payment);
-            calculatedPayment.setInstance(instance);
-            calculatedPayment.setCount(hitCounterService.incrementCounter());
-        
-            return calculatedPayment;
-        }
-    }
-    ```
+           CalculatedPayment calculatedPayment = new CalculatedPayment();
+           calculatedPayment.setAmount(amount);
+           calculatedPayment.setRate(rate);
+           calculatedPayment.setYears(years);
+           calculatedPayment.setPayment(payment);
+           calculatedPayment.setInstance(instance);
+           calculatedPayment.setCount(hitCounterService.incrementCounter());
+
+           return calculatedPayment;
+       }
+   }
+   ```
+
 ## Create a REST Controller to Reset the Hit Count
 
 This is needed for the unit tests - it will reset the hit counter to a known state for each test.
@@ -348,31 +344,31 @@ This is needed for the unit tests - it will reset the hit counter to a known sta
 1. Create a class `ResetHitCounterController` in package `microservice.workshop.redisdemo.http`
 1. Set the content of `ResetHitCounterController` to the following:
 
-    ```java
-    package microservice.workshop.redisdemo.http;
+   ```java
+   package microservice.workshop.redisdemo.http;
 
-    import org.springframework.beans.factory.annotation.Autowired;
-    import org.springframework.web.bind.annotation.CrossOrigin;
-    import org.springframework.web.bind.annotation.GetMapping;
-    import org.springframework.web.bind.annotation.RequestMapping;
-    import org.springframework.web.bind.annotation.RestController;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.web.bind.annotation.CrossOrigin;
+   import org.springframework.web.bind.annotation.GetMapping;
+   import org.springframework.web.bind.annotation.RequestMapping;
+   import org.springframework.web.bind.annotation.RestController;
 
-    import microservice.workshop.redisdemo.service.HitCounterService;
+   import microservice.workshop.redisdemo.service.HitCounterService;
 
-    @CrossOrigin(origins = "*")
-    @RestController
-    @RequestMapping("/resetCount")
-    public class ResetHitCounterController {
+   @CrossOrigin(origins = "*")
+   @RestController
+   @RequestMapping("/resetCount")
+   public class ResetHitCounterController {
 
-        @Autowired
-        private HitCounterService hitCounterService;
-    
-        @GetMapping
-        public void reset() {
-            hitCounterService.resetCount();
-        }
-    }
-    ```
+       @Autowired
+       private HitCounterService hitCounterService;
+
+       @GetMapping
+       public void reset() {
+           hitCounterService.resetCount();
+       }
+   }
+   ```
 
 ## Create a REST Controller to Crash the Application
 
@@ -381,34 +377,34 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
 1. Create a class `CrashController` in package `microservice.workshop.redisdemo.http`
 1. Set the content of `CrashController` to the following:
 
-    ```java
-    package microservice.workshop.redisdemo.http;
+   ```java
+   package microservice.workshop.redisdemo.http;
 
-    import org.springframework.beans.factory.annotation.Autowired;
-    import org.springframework.web.bind.annotation.CrossOrigin;
-    import org.springframework.web.bind.annotation.GetMapping;
-    import org.springframework.web.bind.annotation.RequestMapping;
-    import org.springframework.web.bind.annotation.RestController;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.web.bind.annotation.CrossOrigin;
+   import org.springframework.web.bind.annotation.GetMapping;
+   import org.springframework.web.bind.annotation.RequestMapping;
+   import org.springframework.web.bind.annotation.RestController;
 
-    import io.swagger.annotations.ApiOperation;
-    import microservice.workshop.redisdemo.service.CrashService;
+   import io.swagger.annotations.ApiOperation;
+   import microservice.workshop.redisdemo.service.CrashService;
 
-    @CrossOrigin(origins = "*")
-    @RestController
-    @RequestMapping("/crash")
-    public class CrashController {
+   @CrossOrigin(origins = "*")
+   @RestController
+   @RequestMapping("/crash")
+   public class CrashController {
 
-        @Autowired
-        private CrashService crashService;
+       @Autowired
+       private CrashService crashService;
 
-        @ApiOperation("Warning! The application will crash 2 seconds after this method is called")
-        @GetMapping()
-        public String crashIt() {
-            crashService.crashIt();
-            return "OK";
-        }
-    }
-    ```
+       @ApiOperation("Warning! The application will crash 2 seconds after this method is called")
+       @GetMapping()
+       public String crashIt() {
+           crashService.crashIt();
+           return "OK";
+       }
+   }
+   ```
 
 ## Unit Tests
 
@@ -416,97 +412,99 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
 1. Create a class in the new package called `PaymentControllerTest`
 1. Set the content of `PaymentControllerTest` to the following:
 
-    ```java
-    package microservice.workshop.redisdemo.http;
+   ```java
+   package microservice.workshop.redisdemo.http;
 
-    import static org.hamcrest.Matchers.*;
-    import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-    import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-    import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-    import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-    import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
+   import static org.hamcrest.Matchers.*;
+   import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+   import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+   import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+   import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+   import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
-    import org.junit.jupiter.api.BeforeEach;
-    import org.junit.jupiter.api.Test;
-    import org.junit.jupiter.api.extension.ExtendWith;
-    import org.springframework.beans.factory.annotation.Autowired;
-    import org.springframework.boot.test.context.SpringBootTest;
-    import org.springframework.http.HttpStatus;
-    import org.springframework.http.MediaType;
-    import org.springframework.test.context.junit.jupiter.SpringExtension;
-    import org.springframework.test.web.servlet.MockMvc;
-    import org.springframework.web.context.WebApplicationContext;
+   import org.junit.jupiter.api.BeforeEach;
+   import org.junit.jupiter.api.Test;
+   import org.junit.jupiter.api.extension.ExtendWith;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.boot.test.context.SpringBootTest;
+   import org.springframework.http.HttpStatus;
+   import org.springframework.http.MediaType;
+   import org.springframework.test.context.junit.jupiter.SpringExtension;
+   import org.springframework.test.web.servlet.MockMvc;
+   import org.springframework.web.context.WebApplicationContext;
 
-    @ExtendWith(SpringExtension.class)
-    @SpringBootTest
-    public class PaymentControllerTest {
-        private MockMvc mockMvc;
+   @ExtendWith(SpringExtension.class)
+   @SpringBootTest
+   public class PaymentControllerTest {
+       private MockMvc mockMvc;
 
-        @Autowired
-        private WebApplicationContext webApplicationContext;
+       @Autowired
+       private WebApplicationContext webApplicationContext;
 
-        @BeforeEach
-        public void setup() {
-            this.mockMvc = webAppContextSetup(webApplicationContext).build();
-        }
+       @BeforeEach
+       public void setup() {
+           this.mockMvc = webAppContextSetup(webApplicationContext).build();
+       }
 
-        @Test
-        public void testWithInterest() throws Exception {
-            mockMvc.perform(get("/resetCount"))
-            .andExpect(status().is(HttpStatus.OK.value()));
-        
-            mockMvc.perform(get("/payment?amount=100000&rate=3.5&years=30"))
-            .andExpect(status().is(HttpStatus.OK.value()))
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.payment", is(449.04)))
-            .andExpect(jsonPath("$.count", is(1)));
-        }
+       @Test
+       public void testWithInterest() throws Exception {
+           mockMvc.perform(get("/resetCount"))
+           .andExpect(status().is(HttpStatus.OK.value()));
 
-        @Test
-        public void testZeroInterest() throws Exception {
-            mockMvc.perform(get("/resetCount"))
-            .andExpect(status().is(HttpStatus.OK.value()));
-        
-            mockMvc.perform(get("/payment?amount=100000&rate=0&years=30"))
-            .andExpect(status().is(HttpStatus.OK.value()))
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.payment", is(277.78)))
-            .andExpect(jsonPath("$.count", is(1)));
-        }
+           mockMvc.perform(get("/payment?amount=100000&rate=3.5&years=30"))
+           .andExpect(status().is(HttpStatus.OK.value()))
+           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+           .andExpect(jsonPath("$.payment", is(449.04)))
+           .andExpect(jsonPath("$.count", is(1)));
+       }
 
-        @Test
-        public void testThatHitCounterIncrements() throws Exception {
-            mockMvc.perform(get("/resetCount"))
-            .andExpect(status().is(HttpStatus.OK.value()));
-        
-            mockMvc.perform(get("/payment?amount=100000&rate=3.5&years=30"))
-            .andExpect(status().is(HttpStatus.OK.value()))
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.payment", is(449.04)))
-            .andExpect(jsonPath("$.count", is(1)));
+       @Test
+       public void testZeroInterest() throws Exception {
+           mockMvc.perform(get("/resetCount"))
+           .andExpect(status().is(HttpStatus.OK.value()));
 
-            mockMvc.perform(get("/payment?amount=100000&rate=0&years=30"))
-            .andExpect(status().is(HttpStatus.OK.value()))
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.payment", is(277.78)))
-            .andExpect(jsonPath("$.count", is(2)));
-        }
-    }
-    ```
+           mockMvc.perform(get("/payment?amount=100000&rate=0&years=30"))
+           .andExpect(status().is(HttpStatus.OK.value()))
+           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+           .andExpect(jsonPath("$.payment", is(277.78)))
+           .andExpect(jsonPath("$.count", is(1)));
+       }
+
+       @Test
+       public void testThatHitCounterIncrements() throws Exception {
+           mockMvc.perform(get("/resetCount"))
+           .andExpect(status().is(HttpStatus.OK.value()));
+
+           mockMvc.perform(get("/payment?amount=100000&rate=3.5&years=30"))
+           .andExpect(status().is(HttpStatus.OK.value()))
+           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+           .andExpect(jsonPath("$.payment", is(449.04)))
+           .andExpect(jsonPath("$.count", is(1)));
+
+           mockMvc.perform(get("/payment?amount=100000&rate=0&years=30"))
+           .andExpect(status().is(HttpStatus.OK.value()))
+           .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+           .andExpect(jsonPath("$.payment", is(277.78)))
+           .andExpect(jsonPath("$.count", is(2)));
+       }
+   }
+   ```
 
 ## Testing
 
 1. Run the unit tests:
-    - (Windows Command Prompt) `mvnw clean test`
-    - (Windows Powershell) `.\mvnw clean test`
-    - (Mac/Linux) `./mvnw clean test`
-    - Or your IDE's method of running tests
+
+   - (Windows Command Prompt) `mvnw clean test`
+   - (Windows Powershell) `.\mvnw clean test`
+   - (Mac/Linux) `./mvnw clean test`
+   - Or your IDE's method of running tests
 
 1. Start the application:
-    - (Windows Command Prompt) `mvnw spring-boot:run`
-    - (Windows Powershell) `.\mvnw  spring-boot:run`
-    - (Mac/Linux) `./mvnw  spring-boot:run`
-    - Or your IDE's method of running the main application class
+
+   - (Windows Command Prompt) `mvnw spring-boot:run`
+   - (Windows Powershell) `.\mvnw spring-boot:run`
+   - (Mac/Linux) `./mvnw spring-boot:run`
+   - Or your IDE's method of running the main application class
 
 1. Test Swagger [http://localhost:8080](http://localhost:8080)
 1. Test the acuator health endpoint [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
@@ -516,22 +514,23 @@ This is needed to demonstrate Cloud Foundriy's self-healing capabilities.
 
 1. Create a file `manifest.yml` in the project root directory. Set it's contents to the following:
 
-    ```yaml
-    applications:
-    - name: RedisDemo-1.0
-      path: target/redis-demo-0.0.1-SNAPSHOT.jar
-      random-route: true
-      env:
-        JBP_CONFIG_OPEN_JDK_JRE: '{jre: {version: 11.+}}'
-    ```
+   ```yaml
+   applications:
+     - name: RedisDemo-1.0
+       path: target/redis-demo-0.0.1-SNAPSHOT.jar
+       random-route: true
+       env:
+         JBP_CONFIG_OPEN_JDK_JRE: "{jre: {version: 11.+}}"
+   ```
 
-    Note that this manifest specifies JRE 11+. This is not required if you are using Java 8 (the Java buildpack default). If you are using a different version of Java, you can change the environment variable accordingly. 
+   Note that this manifest specifies JRE 11+. This is not required if you are using Java 8 (the Java buildpack default). If you are using a different version of Java, you can change the environment variable accordingly.
 
 1. Build the application JAR file:
-    - (Windows Command Prompt) `mvnw clean package`
-    - (Windows Powershell) `.\mvnw  clean package`
-    - (Mac/Linux) `./mvnw  clean package`
-    - Or your IDE's method of running the Maven build
+
+   - (Windows Command Prompt) `mvnw clean package`
+   - (Windows Powershell) `.\mvnw clean package`
+   - (Mac/Linux) `./mvnw clean package`
+   - Or your IDE's method of running the Maven build
 
 1. `cf push`
 
@@ -571,7 +570,6 @@ Some interesting CLI commands...
 
 Applications can be scaled in two ways - through the app manager UI, or through the CLI. We will use the CLI.
 
-
 1. Start the loan-calculator-client web page by using this URL: https://jeffgbutler.github.io/payment-calculator-client/
 1. Enter the URL to your application (like https://redisdemo-10-shy-zebra.cfapps.io) in the Base URL textbox
 1. Press the "Start" button. You should see random traffic being generated to the application. You should also see the all traffic is routed to instance 0
@@ -599,99 +597,100 @@ You should have noticed that the hit counter is not consistent among the instanc
 1. Create a new class `RedisHitCounterService` in the `microservice.workshop.redisdemo.service` package
 1. Set the contents of `RedisHitCounterService` to the following:
 
-    ```java
-    package microservice.workshop.redisdemo.service;
+   ```java
+   package microservice.workshop.redisdemo.service;
 
-    import org.springframework.beans.factory.annotation.Autowired;
-    import org.springframework.context.annotation.Profile;
-    import org.springframework.data.redis.core.RedisTemplate;
-    import org.springframework.stereotype.Service;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.context.annotation.Profile;
+   import org.springframework.data.redis.core.RedisTemplate;
+   import org.springframework.stereotype.Service;
 
-    @Service
-    @Profile("cloud")
-    public class RedisHitCounterService implements HitCounterService {
+   @Service
+   @Profile("cloud")
+   public class RedisHitCounterService implements HitCounterService {
 
-        private static final String REDIS_KEY = "payment-calculator";
-        private static final int DEFAULT_VALUE = 5000;
+       private static final String REDIS_KEY = "payment-calculator";
+       private static final int DEFAULT_VALUE = 5000;
 
-        @Autowired
-        private RedisTemplate<String, Integer> redisTemplate;
+       @Autowired
+       private RedisTemplate<String, Integer> redisTemplate;
 
-        @Override
-        public long incrementCounter() {
-            redisTemplate.opsForValue().setIfAbsent(REDIS_KEY, DEFAULT_VALUE);
-            return redisTemplate.opsForValue().increment(REDIS_KEY);
-        }
+       @Override
+       public long incrementCounter() {
+           redisTemplate.opsForValue().setIfAbsent(REDIS_KEY, DEFAULT_VALUE);
+           return redisTemplate.opsForValue().increment(REDIS_KEY);
+       }
 
-        @Override
-        public void resetCount() {
-            redisTemplate.opsForValue().set(REDIS_KEY, DEFAULT_VALUE);
-        }
-    }
-    ```
+       @Override
+       public void resetCount() {
+           redisTemplate.opsForValue().set(REDIS_KEY, DEFAULT_VALUE);
+       }
+   }
+   ```
 
 1. Create a class `CloudConfiguration` in the `microservice.workshop.redisdemo` package. Add the following:
 
-    ```java
-    package microservice.workshop.redisdemo;
+   ```java
+   package microservice.workshop.redisdemo;
 
-    import org.springframework.context.annotation.Bean;
-    import org.springframework.context.annotation.Configuration;
-    import org.springframework.context.annotation.Profile;
-    import org.springframework.data.redis.connection.RedisConnectionFactory;
-    import org.springframework.data.redis.core.RedisTemplate;
-    import org.springframework.data.redis.serializer.GenericToStringSerializer;
+   import org.springframework.context.annotation.Bean;
+   import org.springframework.context.annotation.Configuration;
+   import org.springframework.context.annotation.Profile;
+   import org.springframework.data.redis.connection.RedisConnectionFactory;
+   import org.springframework.data.redis.core.RedisTemplate;
+   import org.springframework.data.redis.serializer.GenericToStringSerializer;
 
-    @Configuration
-    @Profile("cloud")
-    public class CloudConfiguration {
-        @Bean
-        public RedisTemplate<String, Integer> redisTemplate(RedisConnectionFactory redisFactory) {
-            RedisTemplate<String, Integer> template = new RedisTemplate<>();
-            template.setConnectionFactory(redisFactory);
-            template.setValueSerializer(new GenericToStringSerializer<>(Integer.class));
-            return template;
-        }
-    }
-    ```
+   @Configuration
+   @Profile("cloud")
+   public class CloudConfiguration {
+       @Bean
+       public RedisTemplate<String, Integer> redisTemplate(RedisConnectionFactory redisFactory) {
+           RedisTemplate<String, Integer> template = new RedisTemplate<>();
+           template.setConnectionFactory(redisFactory);
+           template.setValueSerializer(new GenericToStringSerializer<>(Integer.class));
+           return template;
+       }
+   }
+   ```
 
-    This configuration is enabled when the "cloud" profile is enabled only. On Cloud Foundry, the Java build pack enables this profile. When enabled, this configuration will create a Redis connection based on the Redis instance bound to the application.
+   This configuration is enabled when the "cloud" profile is enabled only. On Cloud Foundry, the Java build pack enables this profile. When enabled, this configuration will create a Redis connection based on the Redis instance bound to the application.
 
 1. Open `MemoryHitCounterService.java` in the `microservice.workshop.redisdemo.service` package
 1. Change the service so that it is only active when not on the cloud:
 
-    ```java
-    @Service
-    @Profile("!cloud")
-    public class MemoryHitCounterService implements HitCounterService {
-        ...
-    }
-    ```
+   ```java
+   @Service
+   @Profile("!cloud")
+   public class MemoryHitCounterService implements HitCounterService {
+       ...
+   }
+   ```
 
 1. Modify the file `manifest.yml` in the project root directory. Set it's contents to the following:
 
-    ```yaml
-    applications:
-    - name: RedisDemo-1.1
-      path: target/redis-demo-0.0.1-SNAPSHOT.jar
-      random-route: true
-      env:
-        JBP_CONFIG_OPEN_JDK_JRE: '{jre: {version: 11.+}}'
-      services:
-      - xxxredis
-    ```
+   ```yaml
+   applications:
+     - name: RedisDemo-1.1
+       path: target/redis-demo-0.0.1-SNAPSHOT.jar
+       random-route: true
+       env:
+         JBP_CONFIG_OPEN_JDK_JRE: "{jre: {version: 11.+}}"
+       services:
+         - xxxredis
+   ```
 
-    Where "xxxredis" maps to the name of the redis instance you created above.
-    
-    **Important Note:** you should also change the name of the application to denote the new version.
+   Where "xxxredis" maps to the name of the redis instance you created above.
+
+   **Important Note:** you should also change the name of the application to denote the new version.
 
 1. Delete the file `application-cloud.yml` in `src/main/resources`
 
 1. Build the application:
-    - (Windows Command Prompt) `mvnw clean package`
-    - (Windows Powershell) `.\mvnw  clean package`
-    - (Mac/Linux) `./mvnw  clean package`
-    - Or your IDE's method of running the Maven build
+
+   - (Windows Command Prompt) `mvnw clean package`
+   - (Windows Powershell) `.\mvnw clean package`
+   - (Mac/Linux) `./mvnw clean package`
+   - Or your IDE's method of running the Maven build
 
 1. `cf push`
 
