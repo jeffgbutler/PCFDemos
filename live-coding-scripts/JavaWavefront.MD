@@ -4,6 +4,8 @@ Follow the steps in the [Java and Redis](JavaRedis.MD) demo up to, but not inclu
 
 Documentation about using Wavefront with Spring Boot: https://docs.wavefront.com/wavefront_springboot.html
 
+If you are starting from scratch with the Spring initializer, you can add Wavefront as a dependency when the app is created.
+
 ## Basic Wavefront Configuration
 
 1. Open `pom.xml`, add the following dependencies:
@@ -92,7 +94,7 @@ This is all you need to do to add basic Wavefront support to a Spring Boot appli
 
 ## Wavefront Customization
 
-You will notice that the Wavefront dashboard shows data four your application as "unnamed_application" and "unnamed_service". We can fix this by adding Wavefront configuration to the application properties.
+You will notice that the Wavefront dashboard shows data for your application as "unnamed_application" and "unnamed_service". We can fix this by adding Wavefront configuration to the application properties.
 
 1. Open `src/main/resources/application.yml`
 1. Add the following values:
@@ -132,7 +134,7 @@ You may also find that copying the URL from the log output is a cumbersome way o
 
 ## Error Diagnosis
 
-Wavefront can be very useful debug tool for developers. It will captures errors and their associated log messages. We will change the application so that it throws some errors, and then see how Wavefront can be used to find and diagnose errors.
+Wavefront can be very useful debug tool for developers. It will capture errors and their associated log messages. We will change the application so that it throws some errors, and then see how Wavefront can be used to find and diagnose errors.
 
 1. Open `PaymentController.java` in the `microservice.workshop.redisdemo.http` package
 1. Add the following lines to the top of the `calculatePayment` method:
