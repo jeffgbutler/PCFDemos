@@ -1,5 +1,5 @@
 applications:
-- name: loan-calculator-1.0
+- name: loan-calculator-1-0
   memory: 640M
   path: target/loan-calculator-1.0.jar
   random-route: true
